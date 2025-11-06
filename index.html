@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -502,7 +502,8 @@
                             <small class="text-muted">${purchase.date}</small>
                         </div>
                         <p class="mb-1 text-muted">Itens: ${itemsList}</p>
-                        <p class="mb-0 fs-5 fw-bold text-success text-end">Total: R$ ${purchase.total.toFixed(2)}`;
+                        <p class="mb-0 fs-5 fw-bold text-success text-end">Total: R$ ${purchase.total.toFixed(2)}</p>
+                    `;
                     purchaseListEl.appendChild(purchaseEl);
                 });
             } else {
@@ -656,9 +657,75 @@
             return JSON.parse(jsonPayload);
         }
 
-        /* *** FUNÇÃO buildEmailTemplate REMOVIDA ***
-        // A função buildEmailTemplate foi movida para o backend (api/send-email.js)
-        */
+        function buildEmailTemplate(user, cart) {
+            
+            const itemsTableBody = cart.map(item => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px 0; color: #333;">${item.name}</td>
+                    <td style="padding: 10px 0; text-align: center; color: #333;">${item.quantity}</td>
+                    <td style="padding: 10px 0; text-align: right; color: #333;">R$ ${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+            
+            const fullMessageHtml = `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                    
+                    <div style="background-color: #1a1a1a; color: white; padding: 25px; text-align: center; border-bottom: 5px solid #28a745;">
+                        <h1 style="margin: 0; font-size: 26px; font-weight: 600;">Minha Loja Online</h1>
+                        <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.8;">Confirmação de Pedido Recebido</p>
+                    </div>
+
+                    <div style="padding: 30px;">
+                        
+                        <h2 style="color: #1a1a1a; margin-top: 0; font-size: 20px;">Olá, <span style="color: #28a745; font-weight: 700;">${user.name}</span>!</h2>
+                        
+                        <p style="font-size: 15px; margin-bottom: 25px;">Sua compra foi um sucesso! Recebemos o seu pedido e estamos processando os itens.</p>
+
+                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9;">
+                            <h3 style="color: #555; margin-top: 0; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
+                                Detalhes do Pedido
+                            </h3>
+                            
+                            <table width="100%" style="border-collapse: collapse; margin-top: 15px;">
+                                <thead>
+                                    <tr style="background-color: #e0e0e0;">
+                                        <th style="padding: 10px; text-align: left; color: #1a1a1a;">Produto</th>
+                                        <th style="padding: 10px; text-align: center; color: #1a1a1a;">Qtd</th>
+                                        <th style="padding: 10px; text-align: right; color: #1a1a1a;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsTableBody}
+                                </tbody>
+                            </table>
+                            </div>
+                        
+                        <div style="margin-top: 30px; text-align: right;">
+                            <p style="font-size: 18px; font-weight: 500; color: #1a1a1a; margin: 0;">TOTAL DA COMPRA:</p>
+                            <p style="font-size: 30px; font-weight: bold; color: #28a745; margin: 5px 0 0 0;">R$ ${total}</p>
+                        </div>
+                        
+                        <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
+                            Você receberá um novo e-mail assim que o pedido for enviado.
+                        </p>
+                    </div>
+
+                    <div style="background-color: #f4f4f4; color: #999; padding: 15px; text-align: center; font-size: 12px; border-top: 1px solid #eee;">
+                        <p style="margin: 0;">Minha Loja Online | Onde a qualidade encontra você. <br>Em caso de dúvidas, entre em contato.</p>
+                    </div>
+                </div>
+            `;
+            
+            return {
+                to_name: user.name,
+                to_email: user.email,
+                message_html: fullMessageHtml,
+                from_name: "Minha Loja Online",
+                order_total: total
+            };
+        }
 
         // FUNÇÕES DE BLOQUEIO/DESBLOQUEIO DO LOGIN
         function enableLoginButtons() {
@@ -668,7 +735,7 @@
             loginMessageEl.innerHTML = ''; 
         }
 
-        function disableLoginButtons() {
+        function function() {
             submitLoginBtn.disabled = true;
             googleLoginContainer.style.pointerEvents = 'none';
             googleLoginContainer.style.opacity = '0.6';
@@ -726,10 +793,8 @@
             changePassword(currentPassword, newPassword);
         });
 
-        // ----------------------------------------------------
-        // NOVO BLOCO DO CHECKOUT COM CHAMADA PARA O BACK-END VERCEL
-        // ----------------------------------------------------
-        checkoutBtn.addEventListener('click', async () => {
+        // 🚀 NOVO EVENT LISTENER: Usa fetch para chamar a API Node.js/Vercel
+        checkoutBtn.addEventListener('click', () => {
             if (cart.length === 0) {
                 alert('Seu carrinho está vazio!');
                 return;
@@ -741,54 +806,56 @@
                 return;
             }
 
-            try {
-                // Prepara os dados que serão enviados para a Serverless Function
-                const checkoutData = {
-                    user: {
-                        name: loggedInUser.name,
-                        email: loggedInUser.email
-                    },
-                    cart: cart.map(item => ({ // Envia apenas dados essenciais do carrinho
-                        name: item.name,
-                        price: item.price,
-                        quantity: item.quantity
-                    }))
-                };
-
-                // Chamada HTTP para a Serverless Function /api/send-email
-                const response = await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(checkoutData)
-                });
-
-                if (response.ok) {
-                    console.log('E-MAIL ENVIADO com sucesso (via Back-End Vercel)!');
-                    // Continua com a lógica de sucesso
-                } else {
-                    const errorData = await response.json();
-                    console.error('ERRO AO ENVIAR E-MAIL (Front-End):', errorData.error || response.statusText);
-                    alert(`Compra finalizada, mas houve um erro ao enviar o e-mail de confirmação. Detalhe: ${errorData.error || 'Erro desconhecido.'}`);
-                    // NOTA: O fluxo de compra continua mesmo com erro de e-mail.
+            const emailData = buildEmailTemplate(loggedInUser, cart);
+            
+            // 🚨 ATUALIZE ESTA VARIÁVEL com a URL da sua API na Vercel 🚨
+            // Exemplo: 'https://minha-api-ecommerce.vercel.app/api/send-email'
+            // Se o frontend e backend estiverem no mesmo projeto/domínio da Vercel, use a URL relativa:
+            const API_EMAIL_ENDPOINT = '/api/send-email'; 
+            
+            // Preparar o payload (corpo da requisição POST)
+            const payload = {
+                to_email: emailData.to_email,
+                to_name: emailData.to_name,
+                subject: `Confirmação de Pedido - Total: R$ ${emailData.order_total}`,
+                message_html: emailData.message_html, // O corpo HTML grande e formatado
+                order_total: emailData.order_total
+            };
+            
+            fetch(API_EMAIL_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Lança um erro se a resposta HTTP não for 2xx (ex: 400 ou 500)
+                    throw new Error(`Erro ao enviar e-mail: Status ${response.status}`);
                 }
-                
-            } catch (error) {
-                console.error('ERRO DE CONEXÃO AO ENVIAR E-MAIL:', error);
-                alert('Compra finalizada, mas houve um erro de conexão ao tentar enviar o e-mail.');
-            } finally {
-                // Lógica de Finalização (ocorre independentemente do sucesso do e-mail)
+                return response.json();
+            })
+            .then(data => {
+                console.log('E-MAIL ENVIADO COM SUCESSO! Message ID:', data.messageId);
+                // Ações de sucesso (salvar compra, limpar carrinho)
                 savePurchase();
                 cart = [];
                 localStorage.setItem('cart', JSON.stringify(cart));
                 updateCart();
                 showSection('checkout');
-            }
+            })
+            .catch(error => {
+                console.error('ERRO GERAL NO CHECKOUT:', error);
+                // Ações de fallback (a compra é salva, mesmo que o e-mail falhe)
+                savePurchase(); 
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCart();
+                showSection('checkout');
+                alert('Compra finalizada, mas houve um erro ao enviar o e-mail de confirmação. Detalhes: ' + error.message);
+            });
         });
-        // ----------------------------------------------------
-        // FIM DO NOVO BLOCO DO CHECKOUT
-        // ----------------------------------------------------
 
         // Inicialização
         function initializeApp() {

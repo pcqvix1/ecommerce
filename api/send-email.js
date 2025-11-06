@@ -1,155 +1,94 @@
 // api/send-email.js
-const { Resend } = require('resend');
+const express = require('express');
+const nodemailer = require('nodemailer');
+// Adicione 'cors' para permitir que seu frontend (domínio diferente) chame a API.
+const cors = require('cors'); 
+require('dotenv').config(); 
 
-// ----------------------------------------------------
-// DOCUMENTAÇÃO: Variáveis de Ambiente e Segurança
-// ----------------------------------------------------
-// Inicializa o cliente Resend usando a chave de API do Vercel
-// O Vercel injeta automaticamente esta variável no processo de execução.
-const resend = new Resend(process.env.RESEND_API_KEY);
+const app = express();
 
-// O domínio/email de remetente DEVE ser um email verificado no Resend.
-// Resend exige o formato "nome@dominio.com" ou "Nome <nome@dominio.com>"
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'onboarding@resend.dev'; 
-const SENDER_NAME = 'Minha Loja Online';
+// Configuração do CORS (MUITO IMPORTANTE para e-commerce)
+// Substitua o placeholder pela URL REAL do seu site de e-commerce!
+const allowedOrigins = [
+    'http://localhost:8080', // Exemplo para desenvolvimento local
+    'https://ecommerce.vercel.app', // **A URL do seu e-commerce**
+    'https://ecommerce.vercel.app'
+];
 
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permite requisições sem 'origin' (como apps móveis, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Permite a origem se estiver na lista
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'A política CORS para esta origem não permite acesso.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: 'POST', // Permite apenas o método POST
+    credentials: true
+}));
 
-// ----------------------------------------------------
-// DOCUMENTAÇÃO: Funções Auxiliares (Template HTML)
-// ----------------------------------------------------
+app.use(express.json()); 
 
-/**
- * @description Constrói a tabela HTML com os itens do carrinho.
- * @param {Array<Object>} cart - O array de itens do carrinho.
- * @returns {string} O HTML do corpo da tabela.
- */
-function buildItemsTable(cart) {
-    // [CONTEÚDO DA FUNÇÃO ANTERIOR MANTIDO AQUI]
-    return cart.map(item => `
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 10px 0; color: #333;">${item.name}</td>
-            <td style="padding: 10px 0; text-align: center; color: #333;">${item.quantity}</td>
-            <td style="padding: 10px 0; text-align: right; color: #333;">R$ ${(item.price * item.quantity).toFixed(2)}</td>
-        </tr>
-    `).join('');
-}
+// 1. Configurar o Transportador (Transporter) do Nodemailer
+// As credenciais são carregadas de forma segura pelas Variáveis de Ambiente na Vercel
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_PORT == 465, 
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+    // Adiciona uma opção para o ambiente Vercel (opcional, mas recomendado)
+    pool: true, 
+    maxConnections: 10,
+    maxMessages: 100 
+});
 
-/**
- * @description Gera o template HTML completo do email.
- * @param {Object} user - Dados do utilizador (nome, email).
- * @param {Array<Object>} cart - Itens do carrinho.
- * @returns {string} O HTML completo do email.
- */
-function buildEmailTemplate(user, cart) {
-    const itemsTableBody = buildItemsTable(cart);
-    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
-    
-    // O template HTML que você criou
-    const fullMessageHtml = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-            
-            <div style="background-color: #1a1a1a; color: white; padding: 25px; text-align: center; border-bottom: 5px solid #28a745;">
-                <h1 style="margin: 0; font-size: 26px; font-weight: 600;">Minha Loja Online</h1>
-                <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.8;">Confirmação de Pedido Recebido</p>
-            </div>
-
-            <div style="padding: 30px;">
-                
-                <h2 style="color: #1a1a1a; margin-top: 0; font-size: 20px;">Olá, <span style="color: #28a745; font-weight: 700;">${user.name}</span>!</h2>
-                
-                <p style="font-size: 15px; margin-bottom: 25px;">Sua compra foi um sucesso! Recebemos o seu pedido e estamos processando os itens.</p>
-
-                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9;">
-                    <h3 style="color: #555; margin-top: 0; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
-                        Detalhes do Pedido
-                    </h3>
-                    
-                    <table width="100%" style="border-collapse: collapse; margin-top: 15px;">
-                        <thead>
-                            <tr style="background-color: #e0e0e0;">
-                                <th style="padding: 10px; text-align: left; color: #1a1a1a;">Produto</th>
-                                <th style="padding: 10px; text-align: center; color: #1a1a1a;">Qtd</th>
-                                <th style="padding: 10px; text-align: right; color: #1a1a1a;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsTableBody}
-                        </tbody>
-                    </table>
-                    </div>
-                
-                <div style="margin-top: 30px; text-align: right;">
-                    <p style="font-size: 18px; font-weight: 500; color: #1a1a1a; margin: 0;">TOTAL DA COMPRA:</p>
-                    <p style="font-size: 30px; font-weight: bold; color: #28a745; margin: 5px 0 0 0;">R$ ${total}</p>
-                </div>
-                
-                <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
-                    Você receberá um novo e-mail assim que o pedido for enviado.
-                </p>
-            </div>
-
-            <div style="background-color: #f4f4f4; color: #999; padding: 15px; text-align: center; font-size: 12px; border-top: 1px solid #eee;">
-                <p style="margin: 0;">Minha Loja Online | Onde a qualidade encontra você. <br>Em caso de dúvidas, entre em contato.</p>
-            </div>
-        </div>
-    `;
-    
-    return fullMessageHtml;
-}
-
-
-// ----------------------------------------------------
-// DOCUMENTAÇÃO: O Handler da Serverless Function (Vercel)
-// ----------------------------------------------------
-
-/**
- * @description O ponto de entrada principal para a Serverless Function do Vercel.
- * @param {Object} req - Objeto de requisição HTTP (Request).
- * @param {Object} res - Objeto de resposta HTTP (Response).
- */
-module.exports = async (req, res) => {
-    
+// 2. Definir o Endpoint da API para Envio de E-mail
+const sendEmail = async (req, res) => {
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido. Use POST.' });
+        return res.status(405).send({ message: 'Apenas método POST é permitido.' });
     }
 
+    // Os dados esperados agora são 'to', 'subject' e 'html'
+    const { to_email, to_name, subject, message_html } = req.body;
+    
+    // Validação básica dos dados
+    if (!to_email || !subject || !message_html) {
+        return res.status(400).send({ message: 'Campos obrigatórios: to_email, subject e message_html.' });
+    }
+
+    // 3. Estruturar a Mensagem
+    const mailOptions = {
+        from: `"${to_name || 'Cliente'}" <${process.env.EMAIL_FROM}>`, // Remetente com nome dinâmico
+        to: to_email,         // Destinatário
+        subject: subject, // Assunto
+        html: message_html,       // Corpo do e-mail em HTML (o template)
+        // Adicione aqui uma versão em texto puro caso queira (melhor prática de e-mail)
+        text: `Olá ${to_name || 'Cliente'},\n\nSua compra foi um sucesso! Total: ${req.body.order_total}. Obrigado!`,
+    };
+
+    // 4. Enviar o E-mail
     try {
-        const { user, cart } = req.body; 
-
-        if (!user || !user.email || !cart || cart.length === 0) {
-            return res.status(400).json({ error: 'Dados de usuário ou carrinho ausentes ou inválidos.' });
-        }
-
-        // 1. Geração do Template
-        const emailHtml = buildEmailTemplate(user, cart);
-
-        // 2. Montagem e Envio do Email usando RESEND
-        
-        // Formato necessário para o Resend: "Nome Remetente <email@dominio.com>"
-        const fromEmail = `${SENDER_NAME} <${SENDER_EMAIL}>`;
-
-        const { data, error } = await resend.emails.send({
-            from: fromEmail, 
-            to: [user.email], // Resend espera um array de emails para 'to'
-            subject: `Confirmação de Pedido - Minha Loja Online`,
-            html: emailHtml,
+        const info = await transporter.sendMail(mailOptions);
+        console.log('E-mail enviado:', info.messageId);
+        return res.status(200).send({ 
+            message: 'E-mail enviado com sucesso!', 
+            messageId: info.messageId 
         });
-
-        if (error) {
-            console.error('ERRO RESEND API:', error);
-            throw new Error(error.message || 'Erro ao comunicar com a API do Resend.');
-        }
-
-        // 3. Resposta de Sucesso
-        res.status(200).json({ message: 'E-mail de confirmação enviado com sucesso!', resendId: data.id });
-
     } catch (error) {
-        console.error('ERRO AO ENVIAR E-MAIL (BACKEND):', error.toString());
-        
-        // 4. Resposta de Erro
-        res.status(500).json({ 
-            error: 'Falha ao enviar o e-mail de confirmação.', 
-            details: error.message 
+        console.error('Erro ao enviar e-mail:', error);
+        return res.status(500).send({ 
+            message: 'Falha ao enviar e-mail.', 
+            error: error.message 
         });
     }
 };
+
+// Exportar como função serverless para a Vercel
+// A Vercel vai mapear a pasta /api para o endpoint /api
+module.exports = sendEmail;
