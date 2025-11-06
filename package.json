@@ -8,6 +8,5 @@
   },
   "dependencies": {
     "resend": "^3.5.1" 
-    /* Use a versão estável mais recente */
   }
 }
