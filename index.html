@@ -211,7 +211,7 @@
                     <span class="password-toggle-icon" onclick="togglePasswordVisibility('login-password')">👁️</span>
                 </div>
                 <div class="mb-3 d-flex justify-content-center">
-                    <div class="g-recaptcha" data-sitekey="6Ld0ogQsAAAAALrRAgAnZoqazaaAmM0PyBg9H7Mj"
+                    <div class="g-recaptcha" data-sitekey="6LcJrfArAAAAACRFhgeun6wDEA6AyEJ6IvCaX9SE"
                          data-callback="enableLoginButtons"
                          data-expired-callback="disableLoginButtons">
                     </div>
@@ -793,7 +793,7 @@
             changePassword(currentPassword, newPassword);
         });
 
-        // 🚀 BLOCO ATUALIZADO: ENVIO DE E-MAIL VIA API SERVERLESS (VERCEL/NODE.JS)
+        // 🚀 BLOCO ATUALIZADO (CORRIGIDO): ENVIO DE E-MAIL VIA API SERVERLESS (VERCEL/NODE.JS)
         checkoutBtn.addEventListener('click', () => {
             if (cart.length === 0) {
                 alert('Seu carrinho está vazio!');
@@ -851,7 +851,8 @@
                 localStorage.setItem('cart', JSON.stringify(cart));
                 updateCart();
                 showSection('checkout');
-                alert('Compra finalizada, mas houve um erro ao enviar o e-mail de confirmação. Detalhes: ' + error.message);
+                // Mostra o erro do servidor, que é o 500 que você recebeu!
+                alert('Compra finalizada, mas houve um erro ao enviar o e-mail de confirmação. Detalhes: ' + error.message); 
             });
         });
 
