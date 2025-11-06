@@ -735,7 +735,7 @@
             loginMessageEl.innerHTML = ''; 
         }
 
-        function function() {
+        function disableLoginButtons() {
             submitLoginBtn.disabled = true;
             googleLoginContainer.style.pointerEvents = 'none';
             googleLoginContainer.style.opacity = '0.6';
@@ -793,7 +793,7 @@
             changePassword(currentPassword, newPassword);
         });
 
-        // 🚀 NOVO EVENT LISTENER: Usa fetch para chamar a API Node.js/Vercel
+        // 🚀 BLOCO ATUALIZADO: ENVIO DE E-MAIL VIA API SERVERLESS (VERCEL/NODE.JS)
         checkoutBtn.addEventListener('click', () => {
             if (cart.length === 0) {
                 alert('Seu carrinho está vazio!');
@@ -808,9 +808,7 @@
 
             const emailData = buildEmailTemplate(loggedInUser, cart);
             
-            // 🚨 ATUALIZE ESTA VARIÁVEL com a URL da sua API na Vercel 🚨
-            // Exemplo: 'https://minha-api-ecommerce.vercel.app/api/send-email'
-            // Se o frontend e backend estiverem no mesmo projeto/domínio da Vercel, use a URL relativa:
+            // Usamos a URL relativa, o que funciona se o frontend e o backend estiverem no mesmo projeto Vercel.
             const API_EMAIL_ENDPOINT = '/api/send-email'; 
             
             // Preparar o payload (corpo da requisição POST)
@@ -847,7 +845,7 @@
             })
             .catch(error => {
                 console.error('ERRO GERAL NO CHECKOUT:', error);
-                // Ações de fallback (a compra é salva, mesmo que o e-mail falhe)
+                // Ações de fallback: A compra é salva e o carrinho é limpo, mesmo se o e-mail falhar.
                 savePurchase(); 
                 cart = [];
                 localStorage.setItem('cart', JSON.stringify(cart));
