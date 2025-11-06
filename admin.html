@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f6f6f6;
+            color: #333;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        h1 {
+            text-align: center;
+            font-weight: 500;
+            color: #1a1a1a;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+        h2 {
+            font-weight: 500;
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            color: #1a1a1a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .empty-message {
+            text-align: center;
+            color: #888;
+            padding: 2rem;
+        }
+        .action-buttons {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .action-buttons button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .action-buttons button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Painel de Administração da Loja</h1>
+
+        <div class="action-buttons">
+            <button id="clear-data-btn">Limpar Todos os Dados</button>
+        </div>
+
+        <section id="users-section">
+            <h2>Usuários Cadastrados</h2>
+            <table id="users-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Tipo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="users-list">
+                    </tbody>
+            </table>
+            <p id="no-users-message" class="empty-message" style="display: none;">Nenhum usuário cadastrado.</p>
+        </section>
+
+        <section id="purchases-section">
+            <h2>Compras Realizadas</h2>
+            <table id="purchases-table">
+                <thead>
+                    <tr>
+                        <th>ID da Compra</th>
+                        <th>Usuário</th>
+                        <th>Total</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody id="purchases-list">
+                    </tbody>
+            </table>
+            <p id="no-purchases-message" class="empty-message" style="display: none;">Nenhuma compra registrada.</p>
+        </section>
+    </div>
+
+    <script>
+        // Funções para gerenciar o Painel de Administração
+
+        // 1. Carregar dados do localStorage
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let purchases = JSON.parse(localStorage.getItem('purchases')) || {}; // Mudança aqui! Agora é um objeto.
+
+        // 2. Selecionar elementos do HTML
+        const usersListEl = document.getElementById('users-list');
+        const purchasesListEl = document.getElementById('purchases-list');
+        const clearDataBtn = document.getElementById('clear-data-btn');
+        const noUsersMessage = document.getElementById('no-users-message');
+        const noPurchasesMessage = document.getElementById('no-purchases-message');
+
+        // 3. Funções de Renderização
+        function renderUsers() {
+            users = JSON.parse(localStorage.getItem('users')) || []; // Recarrega os dados do localStorage
+            usersListEl.innerHTML = ''; // Limpa a lista
+            if (users.length === 0) {
+                noUsersMessage.style.display = 'block';
+            } else {
+                noUsersMessage.style.display = 'none';
+                users.forEach((user, index) => {
+                    const row = document.createElement('tr');
+                    const userType = user.google ? 'Google' : 'Local';
+                    row.innerHTML = `
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${userType}</td>
+                        <td><button onclick="deleteUser(${index})">Remover</button></td>
+                    `;
+                    usersListEl.appendChild(row);
+                });
+            }
+        }
+
+        function renderPurchases() {
+            purchases = JSON.parse(localStorage.getItem('purchases')) || {}; // Recarrega os dados do localStorage
+            purchasesListEl.innerHTML = ''; // Limpa a lista
+            const allPurchases = Object.values(purchases).flat();
+            if (allPurchases.length === 0) {
+                noPurchasesMessage.style.display = 'block';
+            } else {
+                noPurchasesMessage.style.display = 'none';
+                allPurchases.forEach(purchase => {
+                    const row = document.createElement('tr');
+                    const userName = users.find(u => u.email === purchase.items[0].email)?.name || 'Desconhecido';
+                    row.innerHTML = `
+                        <td>#${purchase.id}</td>
+                        <td>${userName}</td>
+                        <td>R$ ${purchase.total.toFixed(2)}</td>
+                        <td>${purchase.date}</td>
+                    `;
+                    purchasesListEl.appendChild(row);
+                });
+            }
+        }
+
+        // 4. Funções de Ação
+        function deleteUser(index) {
+            users.splice(index, 1); // Remove o usuário do array
+            localStorage.setItem('users', JSON.stringify(users)); // Salva a alteração no localStorage
+            renderUsers(); // Renderiza a lista novamente
+        }
+
+        function clearData() {
+            if (confirm('Tem certeza de que deseja limpar TODOS os dados? Esta ação é irreversível!')) {
+                localStorage.clear();
+                alert('Todos os dados foram limpos.');
+                // Reinicia as variáveis e renderiza novamente para refletir as mudanças
+                users = [];
+                purchases = {};
+                renderUsers();
+                renderPurchases();
+            }
+        }
+
+        // 5. Event Listeners
+        clearDataBtn.addEventListener('click', clearData);
+
+        // 6. Chamadas iniciais
+        renderUsers();
+        renderPurchases();
+    </script>
+</body>
+</html>
