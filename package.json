@@ -7,6 +7,7 @@
     "start": "echo 'Rodando apenas a função serverless, sem servidor web completo.'"
   },
   "dependencies": {
-    "resend": "^3.5.1"
+    "resend": "^3.5.0" 
+    /* Mudança de 3.5.1 para 3.5.0, uma versão ligeiramente anterior e mais estável */
   }
 }
