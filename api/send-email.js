@@ -54,6 +54,13 @@ const sendEmail = async (req, res) => {
         return res.status(400).json({ message: 'Campos obrigatórios: to_email, subject e message_html.' });
     }
 
+    // Garantir que o aviso de demonstração esteja presente no final do e-mail
+    let finalMessageHtml = message_html || '';
+    const demoWarningText = '(ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhum produto será enviado e nenhuma compra é real)';
+    if (!finalMessageHtml.includes(demoWarningText)) {
+        finalMessageHtml += `\n<div style="margin-top:20px;padding:12px;background-color:#fff3cd;color:#856404;border-radius:8px;font-weight:700;text-align:center;">${demoWarningText}</div>`;
+    }
+
     // Criar o transportador dinamicamente — evita falhar no import caso envs mudem.
     let transporter;
     try {
@@ -76,7 +83,7 @@ const sendEmail = async (req, res) => {
         from: `"${to_name || 'Minha Loja Online'}" <${process.env.EMAIL_FROM}>`,
         to: to_email,
         subject,
-        html: message_html,
+        html: finalMessageHtml,
         text: `Olá ${to_name || 'Cliente'},\n\nSua compra foi confirmada. Total: ${order_total || ''}.`,
     };
 

@@ -17,7 +17,9 @@
 
     <style>
         body {
-            background-color: #f0f2f5; /* Um cinza claro suave */
+            /* Fundo mais moderno com suave degradê */
+            background: linear-gradient(180deg, #f4f7fb 0%, #e9f2ff 100%);
+            color: #1f2937;
         }
         /* Garantindo que apenas a seção ativa apareça */
         .section {
@@ -61,6 +63,35 @@
             object-fit: cover;
         }
 
+        /* Botão 'Adicionar ao carrinho' estilizado e feedback */
+        .btn-add-to-cart {
+            background: linear-gradient(180deg,#0b7285 0%, #055a72 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .btn-add-to-cart:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(2,6,23,0.12); }
+        .btn-add-to-cart:active { transform: translateY(0); }
+        .btn-add-to-cart .bi { font-size: 1.05rem; }
+
+        .btn-added {
+            background: linear-gradient(180deg,#16a34a 0%, #15803d 100%) !important;
+            color: #fff !important;
+            box-shadow: 0 8px 18px rgba(16,185,129,0.18) !important;
+        }
+
+        /* Pulso no contador do carrinho */
+        .cart-count-pulse {
+            animation: cartPulse 520ms ease-in-out;
+        }
+        @keyframes cartPulse {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.45); }
+            100% { transform: scale(1); }
+        }
+
         /* Ajuste para o ícone de senha - CORREÇÃO 1 APLICADA AQUI */
         .password-container {
             position: relative;
@@ -89,6 +120,34 @@
             max-width: 250px;
             margin: 0 auto;
             padding-top: 10px;
+        }
+        /* Botão Google customizado (usamos o render do Google dentro do contêiner) */
+        .google-card {
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+            border-radius: 12px;
+            padding: 10px 14px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-google-custom {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #1f2937;
+            background: #fff;
+            border: 1px solid #e6edf8;
+            padding: 10px 18px;
+            border-radius: 999px;
+            box-shadow: 0 4px 12px rgba(2,6,23,0.06);
+            cursor: pointer;
+        }
+        .btn-google-custom .google-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
         }
         
         /* --- CORREÇÕES DOS ESTILOS DA NAVBAR (APENAS COPIADO, SEM MUDANÇAS) --- */
@@ -134,6 +193,10 @@
             background-color: #28a745; 
             border-color: #28a745;
             color: white !important;
+        }
+        /* Nova paleta para a navbar: azul profundo com leve brilho */
+        .navbar-custom {
+            background: linear-gradient(90deg,#0f172a 0%, #0b4f6c 100%);
         }
         
         /* --- FIM DOS AJUSTES --- */
@@ -221,11 +284,21 @@
             <div class="my-3 text-center text-muted">ou</div>
             
             <div class="google-btn-container" id="google-login-container" style="pointer-events: none; opacity: 0.6;">
-                <div id="g_id_onload"
-                    data-client_id="413829830677-q5inimb5f2pj7iu95mkege78hrkt80vo.apps.googleusercontent.com"
-                    data-callback="handleCredentialResponse">
+                <div class="google-card">
+                    <button id="custom-google-btn" type="button" class="btn-google-custom" aria-label="Entrar com Google">
+                        <span class="google-icon">
+                            <!-- SVG do G do Google -->
+                            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="20" height="20" role="img" aria-hidden="true">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.27 1.53 8.15 2.78l6-6C35.5 3 30.11 1 24 1 14.62 1 6.88 6.82 3.5 14.25l7.3 5.66C12.8 14.1 17.9 9.5 24 9.5z"/>
+                                <path fill="#34A853" d="M46.5 24.5c0-1.6-.13-2.8-.4-4H24v7.6h12.9c-.55 3-2.6 5.5-5.6 7.1l8.5 6.6C44.7 36.6 46.5 30.9 46.5 24.5z"/>
+                                <path fill="#4A90E2" d="M10.8 28.9C9.9 26.9 9.5 24.7 9.5 22.5c0-2.2.4-4.4 1.3-6.4L3.5 10C1.6 13.8 0.5 18.1 0.5 22.5c0 4.4 1.1 8.7 3 12.5l7.3-5.1z"/>
+                                <path fill="#FBBC05" d="M24 46.5c6.11 0 11.5-2 15.65-5.5l-8.5-6.6C30.27 35.5 27.54 36.5 24 36.5c-6.1 0-11.2-4.6-13.2-10.9l-7.3 5.6C6.88 41.18 14.62 46.5 24 46.5z"/>
+                            </svg>
+                        </span>
+                        <span>Entrar com Google</span>
+                    </button>
                 </div>
-                <div class="g_id_signin" data-type="standard" data-size="large" data-width="250"></div>
+                <div id="google-render-target" style="display:none;"></div>
             </div>
             
             <p class="text-center mt-4 text-muted">Novo por aqui? <button id="show-register-btn" class="btn btn-link p-0 fw-bold align-baseline text-primary">Crie sua Conta</button></p>
@@ -380,9 +453,9 @@
                         <div class="card-body d-flex flex-column text-center">
                             <h3 class="card-title h5 fw-bold text-dark">${product.name}</h3>
                             <p class="card-text fs-5 text-success fw-bold">R$ ${product.price.toFixed(2)}</p>
-                            <button class="btn btn-dark mt-auto shadow-sm" onclick="addToCart(${product.id})">
-                                <i class="bi bi-cart"></i> Comprar
-                            </button>
+                                <button class="btn btn-dark mt-auto shadow-sm btn-add-to-cart" data-add="${product.id}" onclick="addToCart(event, ${product.id})">
+                                    <i class="bi bi-cart"></i> <span class="btn-add-text">Adicionar ao carrinho</span>
+                                </button>
                         </div>
                     </div>
                 `;
@@ -390,7 +463,11 @@
             });
         }
         
-        function addToCart(productId) {
+        function addToCart(e, productId) {
+            // Localiza o botão clicado (suporta clique em ícone/texto)
+            let btnEl = null;
+            try { btnEl = (e && e.target) ? e.target.closest('button') : null; } catch (err) { btnEl = null; }
+
             const product = products.find(p => p.id === productId);
             const existingItem = cart.find(item => item.id === productId);
             if (existingItem) {
@@ -398,7 +475,30 @@
             } else {
                 cart.push({ ...product, quantity: 1 });
             }
+
             updateCart();
+
+            // Feedback visual no botão
+            if (btnEl) {
+                const originalHtml = btnEl.innerHTML;
+                btnEl.disabled = true;
+                btnEl.classList.add('btn-added');
+                btnEl.innerHTML = `<i class="bi bi-check2-circle"></i> <span class="btn-add-text">Adicionado</span>`;
+
+                // Pulso no contador do carrinho
+                if (cartCountEl) {
+                    cartCountEl.classList.add('cart-count-pulse');
+                    setTimeout(() => cartCountEl.classList.remove('cart-count-pulse'), 600);
+                }
+
+                setTimeout(() => {
+                    try {
+                        btnEl.innerHTML = originalHtml;
+                        btnEl.classList.remove('btn-added');
+                        btnEl.disabled = false;
+                    } catch (err) { /* ignore */ }
+                }, 1400);
+            }
         }
 
         function removeFromCart(productId) {
@@ -619,9 +719,20 @@
 
         // FUNÇÃO handleCredentialResponse CORRIGIDA (CORREÇÃO 3.2)
         function handleCredentialResponse(response) {
-            const userObject = jwt_decode(response.credential);
+                    // Verifica se tivemos um reCAPTCHA resolvido antes deste fluxo de login
+                    if (!window._lastRecaptchaToken) {
+                        // Proteção local: se não houve reCAPTCHA, rejeitamos o fluxo
+                        loginMessageEl.innerHTML = `<div class="error">Falha de segurança: reCAPTCHA não detectado. Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
+                        return;
+                    }
+
+                    // Limpa o token capturado (usado apenas como prova local de que reCAPTCHA ocorreu)
+                    const capturedRecaptcha = window._lastRecaptchaToken;
+                    window._lastRecaptchaToken = null;
+
+                    const userObject = jwt_decode(response.credential);
             
-            let user = users.find(u => u.email === userObject.email);
+                    let user = users.find(u => u.email === userObject.email);
             
             if (user) {
                 // Se o utilizador já existe (com ou sem senha), simplesmente garantimos que
@@ -711,6 +822,11 @@
                         <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
                             Você receberá um novo e-mail assim que o pedido for enviado.
                         </p>
+                        
+                        <!-- AVISO DE DEMONSTRAÇÃO EM AMARELO -->
+                        <div style="margin-top: 20px; text-align: center; padding: 12px; background-color: #fff3cd; color: #856404; border-radius: 8px; font-weight: 700;">
+                            (ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhum produto será enviado e nenhuma compra é real)
+                        </div>
                     </div>
 
                     <div style="background-color: #f4f4f4; color: #999; padding: 15px; text-align: center; font-size: 12px; border-top: 1px solid #eee;">
@@ -883,6 +999,59 @@
 
             // GARANTINDO O BLOQUEIO INICIAL DOS BOTÕES DE LOGIN
             disableLoginButtons();
+
+            // Inicializar o botão do Google Identity de forma controlada
+            try {
+                if (window.google && google.accounts && google.accounts.id) {
+                    // Inicializa o client com nosso callback (já existe handleCredentialResponse)
+                    // Forçamos que NÃO haja auto-select/one-tap automático
+                    google.accounts.id.initialize({
+                        client_id: '413829830677-q5inimb5f2pj7iu95mkege78hrkt80vo.apps.googleusercontent.com',
+                        callback: handleCredentialResponse,
+                        ux_mode: 'popup',
+                        auto_select: false
+                    });
+
+                    // Desabilita seleção automática/One-Tap adicionalmente
+                    if (google.accounts.id.disableAutoSelect) {
+                        google.accounts.id.disableAutoSelect();
+                    }
+
+                    // Renderiza (em target oculto) para garantir disponibilidade - o botão visível é customizado
+                    google.accounts.id.renderButton(
+                        document.getElementById('google-render-target'),
+                        { theme: 'outline', size: 'large', width: '250', shape: 'pill', text: 'signin_with' }
+                    );
+
+                    // Encadeia o clique do botão customizado para abrir o fluxo do Google
+                    const customGoogleBtn = document.getElementById('custom-google-btn');
+                    if (customGoogleBtn) {
+                        customGoogleBtn.addEventListener('click', () => {
+                            // Exigimos que o reCAPTCHA esteja resolvido antes de abrir o popup do Google
+                            try {
+                                const recaptchaResponse = (window.grecaptcha && grecaptcha.getResponse) ? grecaptcha.getResponse() : '';
+                                if (!recaptchaResponse) {
+                                    loginMessageEl.innerHTML = `<div class="error">Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
+                                    return;
+                                }
+
+                                // Guardamos o token do reCAPTCHA para validar quando a credencial do Google chegar
+                                window._lastRecaptchaToken = recaptchaResponse;
+                                // Limpamos o token após 2 minutos por segurança
+                                setTimeout(() => { window._lastRecaptchaToken = null; }, 2 * 60 * 1000);
+
+                                // Prompt abre o fluxo de conta/consent em popup quando ux_mode: 'popup' está definido
+                                google.accounts.id.prompt();
+                            } catch (err) {
+                                console.warn('Erro ao verificar reCAPTCHA antes do login Google:', err);
+                                google.accounts.id.prompt();
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('Não foi possível inicializar o Google Identity:', err);
+            }
 
             // Garante que a seção de produtos é a inicial
             showSection('products'); 
