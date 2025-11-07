@@ -138,11 +138,16 @@
             font-weight: 600;
             color: #1f2937;
             background: #fff;
-            border: 1px solid #e6edf8;
+            /* Borda mais visível para destacar o botão */
+            border: 2px solid #0d6efd; /* azul primário do Bootstrap */
             padding: 10px 18px;
             border-radius: 999px;
             box-shadow: 0 4px 12px rgba(2,6,23,0.06);
             cursor: pointer;
+        }
+        .btn-google-custom:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(13,110,253,0.12);
         }
         .btn-google-custom .google-icon {
             width: 20px;
@@ -283,7 +288,7 @@
             </form>
             <div class="my-3 text-center text-muted">ou</div>
             
-            <div class="google-btn-container" id="google-login-container" style="pointer-events: none; opacity: 0.6;">
+            <div class="google-btn-container" id="google-login-container">
                 <div class="google-card">
                     <button id="custom-google-btn" type="button" class="btn-google-custom" aria-label="Entrar com Google">
                         <span class="google-icon">
@@ -853,9 +858,10 @@
         }
 
         function disableLoginButtons() {
+            // Apenas desabilita o botão de envio do formulário.
+            // O botão customizado do Google fica clicável — o handler interno já valida o reCAPTCHA
+            // antes de abrir o fluxo do Google e exibirá uma mensagem caso o reCAPTCHA não esteja resolvido.
             submitLoginBtn.disabled = true;
-            googleLoginContainer.style.pointerEvents = 'none';
-            googleLoginContainer.style.opacity = '0.6';
         }
 
         
