@@ -1,13 +1,13 @@
 {
-  "name": "ecommerce",
-  "version": "1.0.0",
-  "private": true,
-  "engines": {
-    "node": ">=16"
-  },
-  "dependencies": {
-    "nodemailer": "^6.9.3",
-    "pg": "^8.11.3",         <-- 🔑 NECESSÁRIO para o Neon (API /pg.js)
-    "bcryptjs": "^2.4.3"     <-- 🔑 NECESSÁRIO para criptografar senhas (API /users.js)
-  }
+    "name": "ecommerce",
+    "version": "1.0.0",
+    "private": true,
+    "engines": {
+        "node": ">=16"
+    },
+    "dependencies": {
+        "nodemailer": "^6.9.3",
+        "pg": "^8.11.3",
+        "bcryptjs": "^2.4.3"
+    }
 }
