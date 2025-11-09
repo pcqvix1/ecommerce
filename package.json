@@ -6,6 +6,7 @@
     "node": ">=16"
   },
   "dependencies": {
-    "nodemailer": "^6.9.3"
+    "nodemailer": "^6.9.3",
+    "pg": "^8.11.3"  <-- NOVO: Driver para PostgreSQL
   }
 }

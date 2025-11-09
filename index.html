@@ -6,7 +6,6 @@
     <title>Minha Loja - E-commerce Elegante</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -16,341 +15,371 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <style>
+        /* Estilos Globais e Fundo */
         body {
-            /* Fundo mais moderno com suave degradê */
-            background: linear-gradient(180deg, #f4f7fb 0%, #e9f2ff 100%);
-            color: #1f2937;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #f4f4f4 0%, #ffffff 100%);
+            padding-top: 70px; /* Espaço para o navbar fixo */
         }
-        /* Garantindo que apenas a seção ativa apareça */
+        
+        /* Navbar */
+        .navbar-custom {
+            background-color: #1a1a1a !important; /* Fundo escuro */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand, .nav-link, .btn-link {
+            color: #ffffff !important;
+        }
+        .nav-link:hover, .btn-link:hover {
+            color: #28a745 !important; /* Destaque verde */
+        }
+
+        /* Seções */
         .section {
             display: none;
+            padding: 30px 0;
+            animation: fadeIn 0.5s ease-out;
         }
         .section.active {
             display: block;
         }
-        /* Ajustes no Swiper */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Produtos */
+        .product-card-custom {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #eee;
+        }
+        .product-card-custom:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+        }
+        .product-card-custom img {
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px 4px 0 0;
+        }
+        .btn-add-to-cart {
+            background-color: #1a1a1a;
+            border-color: #1a1a1a;
+            transition: background-color 0.3s;
+        }
+        .btn-add-to-cart:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-add-to-cart.btn-added {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .cart-count-pulse {
+            animation: pulse 0.5s 2;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Swiper/Carrossel */
         .swiper-container {
+            padding-top: 20px;
+            margin-bottom: 30px;
             display: none;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         .swiper-container.active {
             display: block;
         }
-        .swiper {
-            width: 100%;
-            height: 400px; /* Altura do Carrossel */
+        .swiper-slide {
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            overflow: hidden;
         }
-        /* AJUSTE MAIS DETALHADO PARA O SWIPER */
-        .swiper-slide img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Garante que a imagem cubra todo o slide sem distorção */
-        }
-        
-        /* Estilização Avançada para os Cards de Produto */
-        .product-card-custom {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: none;
-        }
-        .product-card-custom:hover {
-            transform: translateY(-8px); /* Efeito de elevação */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important; /* Sombra mais destacada */
-        }
-        .product-card-custom .card-img-top {
-            height: 220px;
-            object-fit: cover;
+        .slide-content {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 80%;
         }
 
-        /* Botão 'Adicionar ao carrinho' estilizado e feedback */
-        .btn-add-to-cart {
-            background: linear-gradient(180deg,#0b7285 0%, #055a72 100%);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 16px;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        /* Formulários e Mensagens */
+        .form-container {
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        .btn-add-to-cart:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(2,6,23,0.12); }
-        .btn-add-to-cart:active { transform: translateY(0); }
-        .btn-add-to-cart .bi { font-size: 1.05rem; }
-
-        .btn-added {
-            background: linear-gradient(180deg,#16a34a 0%, #15803d 100%) !important;
-            color: #fff !important;
-            box-shadow: 0 8px 18px rgba(16,185,129,0.18) !important;
-        }
-
-        /* Pulso no contador do carrinho */
-        .cart-count-pulse {
-            animation: cartPulse 520ms ease-in-out;
-        }
-        @keyframes cartPulse {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.45); }
-            100% { transform: scale(1); }
-        }
-
-        /* Ajuste para o ícone de senha - CORREÇÃO 1 APLICADA AQUI */
-        .password-container {
-            position: relative;
-        }
-        .password-toggle-icon {
-            /* Posição ajustada para alinhar no centro vertical do campo de input */
-            position: absolute;
-            right: 12px;
-            top: 60%; /* Ajuste para melhor alinhamento com o input e a label */
-            transform: translateY(-50%); 
-            cursor: pointer;
-            color: #aaa;
-            z-index: 10;
-        }
-
-        /* Estilos de mensagens */
-        .message {
-            text-align: center;
-            padding: 10px;
-            border-radius: 5px;
+        .form-message {
             margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
         }
-        .success { background-color: #d4edda; color: #155724; }
-        .error { background-color: #f8d7da; color: #721c24; }
-        .google-btn-container {
-            /* Alterado: Adicionada flexbox para centralizar o botão oficial do Google */
-            padding-top: 10px;
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
-        /* Botão Google customizado (usamos o render do Google dentro do contêiner) */
-        /* Removido botão customizado do Google para usar o botão padrão renderizado pela biblioteca */
-        
-        /* --- CORREÇÕES DOS ESTILOS DA NAVBAR (APENAS COPIADO, SEM MUDANÇAS) --- */
-        
-        /* Estilo Base: Garante que os botões OUTLINE tenham texto claro na navbar escura */
-        .navbar .btn-outline-primary,
-        .navbar .btn-outline-light {
-            border-color: #f0f2f5; /* Borda clara */
-            color: #f0f2f5 !important; /* Cor do texto clara para contraste */
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
-
-        /* Base style para Sair */
-        .navbar .btn-outline-danger {
-            color: #f0f2f5 !important;
-            border-color: #f0f2f5;
+        .btn-google {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            transition: background-color 0.3s;
         }
-
-        /* --- Ajuste do hover para ter as cores específicas do Bootstrap --- */
-
-        /* Login (Primary) Hover: Fica azul (cor primária) com texto branco */
-        .navbar .btn-outline-primary:hover {
-            background-color: #0d6efd; /* Cor azul primary do Bootstrap */
-            color: white !important; 
-            border-color: #0d6efd;
+        .btn-google:hover {
+            background-color: #357ae8;
+        }
+        .g-recaptcha {
+            margin-bottom: 15px;
+            transform: scale(0.9);
+            transform-origin: 0 0;
         }
 
-        /* Minha Conta (Light) Hover: Fica claro com texto escuro */
-        .navbar .btn-outline-light:hover {
-            background-color: #f8f9fa; /* Cor clara light do Bootstrap */
-            color: #1a1a1a !important; /* Texto escuro para contraste */
-            border-color: #f8f9fa;
-        }
-
-        /* Sair (Danger) Hover: Fica vermelho (cor danger) com texto branco */
-        .navbar .btn-outline-danger:hover {
-            background-color: #dc3545; /* Cor vermelha danger do Bootstrap */
-            color: white !important; 
-            border-color: #dc3545;
-        }
-        
-        /* Garante que o botão de Sucesso (Carrinho) mantém o contraste */
-        .navbar .btn-success {
-            background-color: #28a745; 
-            border-color: #28a745;
-            color: white !important;
-        }
-        /* Nova paleta para a navbar: azul profundo com leve brilho */
-        .navbar-custom {
-            background: linear-gradient(90deg,#0f172a 0%, #0b4f6c 100%);
-        }
-        
-        /* --- FIM DOS AJUSTES --- */
     </style>
 </head>
 <body>
 
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-lg">
-            <div class="container-fluid container-lg">
-                <a class="navbar-brand fw-bold fs-4 text-white" href="#" onclick="showSection('products'); return false;">Minha Loja Online</a>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-custom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#" onclick="showSection('products')">
+                <i class="bi bi-shop"></i> Minha Loja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('products')">Produtos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('cart')">Carrinho</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-link nav-link me-3" id="show-cart-btn" onclick="updateCart()">
+                        <i class="bi bi-cart"></i> Carrinho (<span id="cart-count">0</span>)
+                    </button>
+                    
+                    <button class="btn btn-outline-light me-2" id="show-account-btn" style="display: none;">
+                        <i class="bi bi-person-circle"></i> Minha Conta
+                    </button>
+                    
+                    <button class="btn btn-outline-light me-2" id="show-login-btn">
+                        <i class="bi bi-box-arrow-in-right"></i> Entrar
+                    </button>
+                    
+                    <button class="btn btn-outline-danger" id="logout-btn" style="display: none;">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <div class="swiper-container mySwiper active">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background-image: url('images/banner1.jpg');">
+                    <div class="slide-content text-center">
+                        <h2 class="display-5 fw-bold">Grandes Ofertas</h2>
+                        <p class="lead">Qualidade premium com preços imbatíveis. Aproveite!</p>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background-image: url('images/banner2.jpg');">
+                    <div class="slide-content text-center">
+                        <h2 class="display-5 fw-bold">Tecnologia de Ponta</h2>
+                        <p class="lead">Os últimos lançamentos do mercado estão aqui.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+
+        <section id="products-section" class="section active">
+            <h2 class="text-center mb-4 display-6 fw-bold">Nossos Produtos em Destaque</h2>
+            <div id="product-list" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                </div>
+        </section>
+
+        <section id="cart-section" class="section">
+            <h2 class="text-center mb-4 display-6 fw-bold">Seu Carrinho de Compras</h2>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="list-group" id="cart-items">
+                        </div>
+                </div>
+                <div class="col-lg-4 mt-4 mt-lg-0">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-body">
+                            <h3 class="card-title h4">Resumo do Pedido</h3>
+                            <p class="fs-4 fw-bold mt-3">Total: R$ <span id="cart-total">0.00</span></p>
+                            <button id="checkout-btn" class="btn btn-success w-100 btn-lg fw-bold mt-3" disabled>
+                                Finalizar Compra <i class="bi bi-credit-card-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="login-section" class="section">
+            <div class="form-container">
+                <h2 class="text-center mb-4 display-6 fw-bold">Acessar Conta</h2>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
-                    <div class="navbar-nav">
-                        <button class="btn btn-success nav-link text-white mx-1 my-1 my-lg-0 position-relative" id="show-cart-btn">
-                            <i class="bi bi-cart"></i> Carrinho 
-                            <span class="badge bg-danger ms-1" id="cart-count">0</span>
-                        </button>
-                        
-                        <button class="btn btn-outline-primary nav-link mx-1 my-1 my-lg-0" id="show-login-btn">Login</button>
-                        <button class="btn btn-outline-light nav-link mx-1 my-1 my-lg-0" id="show-account-btn" style="display:none;">Minha Conta</button>
-                        <button class="btn btn-outline-danger nav-link mx-1 my-1 my-lg-0" id="logout-btn" style="display:none;">Sair</button>
+                <div id="google-login-container" class="mb-3 d-flex justify-content-center">
+                    <div id="g_id_onload"
+                        data-client_id="COLOQUE_SEU_CLIENT_ID_DO_GOOGLE_AQUI.apps.googleusercontent.com"
+                        data-context="signin"
+                        data-ux_mode="popup"
+                        data-callback="handleCredentialResponse"
+                        data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                        data-type="standard"
+                        data-shape="pill"
+                        data-theme="outline"
+                        data-text="signin_with"
+                        data-size="large"
+                        data-logo_alignment="left">
                     </div>
                 </div>
-            </div>
-        </nav>
-    </header>
 
-    <div class="container my-5">
-        
-        <div class="swiper-container active mb-5">
-            <div class="swiper mySwiper">
-                <div class="swiper-wrapper">
-                    <div class="swiper-slide"><img src="images/livro.jpg" alt="Livro" class="img-fluid"></div>
-                    <div class="swiper-slide"><img src="images/canetas.jpg" alt="Canetas" class="img-fluid"></div>
-                    <div class="swiper-slide"><img src="images/relogio.jpg" alt="Relógio" class="img-fluid"></div>
-                </div>
-                <div class="swiper-pagination"></div>
+                <div class="text-center mb-3 text-muted">ou acesse com e-mail e senha</div>
 
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
-            </div>
-        </div>
-
-        <div id="products-section" class="section active p-4 bg-white rounded-4 shadow-lg">
-            <h2 class="pb-3 mb-4 border-bottom text-dark fw-light">✨ Destaques e Produtos</h2>
-            <div id="product-list" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-5">
-                </div>
-        </div>
-
-        <div id="cart-section" class="section p-4 bg-white rounded-4 shadow-lg">
-            <h2 class="pb-3 mb-4 border-bottom text-dark fw-light">🛒 Seu Carrinho</h2>
-            <div id="cart-items" class="list-group list-group-flush border rounded-3">
-                </div>
-            <div id="cart-total-container" class="mt-4 p-3 border-top text-end bg-light rounded-bottom">
-                <span class="fs-4 fw-bold text-dark">TOTAL: R$<span id="cart-total" class="text-success">0.00</span></span>
-            </div>
-            <button id="checkout-btn" class="btn btn-success btn-lg w-100 mt-3 shadow">Finalizar Compra</button>
-        </div>
-
-        <div id="login-section" class="section p-5 bg-white rounded-4 shadow-lg mx-auto" style="max-width: 500px;">
-            <h2 class="pb-3 mb-4 border-bottom text-dark fw-light text-center">🔐 Acesso à Conta</h2>
-            <form id="login-form" class="mx-auto">
-                <div class="mb-3">
-                    <label for="login-email" class="form-label">E-mail</label>
-                    <input type="email" id="login-email" class="form-control form-control-lg" placeholder="seu.email@exemplo.com" required>
-                </div>
-                <div class="mb-3 password-container">
-                    <label for="login-password" class="form-label">Senha</label>
-                    <input type="password" id="login-password" class="form-control form-control-lg" placeholder="********" required>
-                    <span class="password-toggle-icon" onclick="togglePasswordVisibility('login-password')">👁️</span>
-                </div>
-                <div class="mb-3 d-flex justify-content-center">
-                    <div class="g-recaptcha" data-sitekey="6LcJrfArAAAAACRFhgeun6wDEA6AyEJ6IvCaX9SE"
-                         data-callback="enableLoginButtons"
-                         data-expired-callback="disableLoginButtons">
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="login-email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="login-email" required value="">
                     </div>
-                </div>
-                <button type="submit" id="submit-login-btn" class="btn btn-dark w-100 btn-lg shadow-sm" disabled>Entrar</button>
-            </form>
-            <div class="my-3 text-center text-muted">ou</div>
-            
-            <div class="google-btn-container d-flex justify-content-center" id="google-login-container">
-                <div id="g_id_onload"
-                    data-client_id="413829830677-b0q7j33043556os7iertf9b9ij9gbvbi.apps.googleusercontent.com"
-                    data-callback="handleCredentialResponse"
-                    data-ux_mode="popup"
-                    data-auto_select="false"
-                    data-context="signin">
-                </div>
-                
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-size="large"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-shape="pill"
-                     data-logo_alignment="left">
-                </div>
-            </div>
-            <p class="text-center mt-4 text-muted">Novo por aqui? <button id="show-register-btn" class="btn btn-link p-0 fw-bold align-baseline text-primary">Crie sua Conta</button></p>
-            <div id="login-message" class="message"></div>
-        </div>
-
-        <div id="register-section" class="section p-5 bg-white rounded-4 shadow-lg mx-auto" style="max-width: 500px;">
-            <h2 class="pb-3 mb-4 border-bottom text-dark fw-light text-center">📝 Cadastro Rápido</h2>
-            <form id="register-form" class="mx-auto">
-                <div class="mb-3">
-                    <label for="register-name" class="form-label">Nome Completo</label>
-                    <input type="text" id="register-name" class="form-control form-control-lg" placeholder="Seu nome" required>
-                </div>
-                <div class="mb-3">
-                    <label for="register-email" class="form-label">E-mail</label>
-                    <input type="email" id="register-email" class="form-control form-control-lg" placeholder="seu.email@exemplo.com" required>
-                </div>
-                <div class="mb-3 password-container">
-                    <label for="register-password" class="form-label">Senha</label>
-                    <input type="password" id="register-password" class="form-control form-control-lg" placeholder="Crie uma senha forte" required>
-                    <span class="password-toggle-icon" onclick="togglePasswordVisibility('register-password')">👁️</span>
-                </div>
-                <button type="submit" class="btn btn-primary w-100 btn-lg shadow-sm">Cadastrar</button>
-            </form>
-            <div id="register-message" class="message"></div>
-        </div>
-
-        <div id="account-section" class="section p-4 bg-white rounded-4 shadow-lg mx-auto" style="max-width: 800px;">
-            <h2 class="pb-3 mb-4 border-bottom text-dark fw-light text-center">👤 Minha Conta</h2>
-            <div id="account-details" class="text-center mb-4 p-3 bg-light rounded-3">
-                <h3 class="h5 fw-bold text-primary">Detalhes Pessoais</h3>
-                <p class="mb-1 text-start"><strong>Nome:</strong> <span id="account-name"></span></p>
-                <p class="mb-0 text-start"><strong>E-mail:</strong> <span id="account-email"></span></p>
-            </div>
-            <hr class="my-4">
-            <div id="change-password-section" class="mt-4 p-3 border rounded-3 mx-auto" style="max-width: 400px;">
-                <h3 class="h5 text-center mb-3">Alterar Senha</h3>
-                <form id="change-password-form">
-                    <div class="mb-3 password-container" id="current-password-container"> 
-                        <input type="password" id="current-password" class="form-control" placeholder="Senha Atual" required>
-                        <span class="password-toggle-icon" onclick="togglePasswordVisibility('current-password')">👁️</span>
+                    <div class="mb-3">
+                        <label for="login-password" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="login-password" required value="">
                     </div>
-                    <div class="mb-3 password-container">
-                        <input type="password" id="new-password" class="form-control" placeholder="Nova Senha" required>
-                        <span class="password-toggle-icon" onclick="togglePasswordVisibility('new-password')">👁️</span>
-                    </div>
-                    <button type="submit" class="btn btn-outline-dark w-100">Alterar Senha</button>
+                    
+                    <div class="g-recaptcha" data-sitekey="COLOQUE_SUA_CHAVE_SITE_DO_RECAPTCHA_AQUI" data-callback="enableLoginButtons" data-expired-callback="disableLoginButtons"></div>
+                    
+                    <button id="submit-login-btn" type="submit" class="btn btn-dark w-100 fw-bold" disabled>Entrar</button>
                 </form>
-                <div id="password-message" class="message"></div>
-            </div>
-            <hr class="my-4">
-            <div id="purchase-history" class="mt-4">
-                <h3 class="h5 text-center mb-3">🧾 Histórico de Compras</h3>
-                <div id="purchase-list" class="list-group"></div>
-            </div>
-        </div>
 
-        <div id="checkout-section" class="section bg-light text-center">
-            <div class="d-flex flex-column justify-content-center align-items-center min-vh-100 pt-5 pb-5"> 
-                <div class="p-5 bg-success text-white rounded-4 shadow-lg" style="max-width: 800px; width: 90%;">
-                    <h2 class="h1 fw-bold">Compra Finalizada 🎉</h2>
-                    <p class="lead mt-3">Obrigado por sua compra! Seu pedido foi processado com sucesso.</p>
-                    <p class="mt-4">Um e-mail de confirmação será enviado para <span id="account-email-checkout" class="fw-bold">seu e-mail</span>.</p>
-                    <p class="mt-3 text-warning fw-bold">(ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhum produto será enviado e nenhuma compra é real)</p>
+                <div id="login-message" class="form-message"></div>
+
+                <div class="text-center mt-3">
+                    <p class="mb-0">Não tem conta? <a href="#" id="show-register-btn" class="text-success fw-bold">Cadastre-se</a></p>
                 </div>
             </div>
-        </div>
-        </div>
-    
-    <footer class="bg-dark text-white-50 mt-5 py-4">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2025 Minha Loja Online. Todos os direitos reservados.</p>
-        </div>
-    </footer>
+        </section>
+
+        <section id="register-section" class="section">
+            <div class="form-container">
+                <h2 class="text-center mb-4 display-6 fw-bold">Novo Cadastro</h2>
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label for="register-name" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="register-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="register-email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-password" class="form-label">Senha (mín. 6 caracteres)</label>
+                        <input type="password" class="form-control" id="register-password" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold">Registrar</button>
+                </form>
+                <div id="register-message" class="form-message"></div>
+            </div>
+        </section>
+
+        <section id="account-section" class="section">
+            <h2 class="text-center mb-4 display-6 fw-bold">Minha Conta</h2>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-body">
+                            <h3 class="card-title h4 text-primary"><i class="bi bi-person-fill"></i> Dados Pessoais</h3>
+                            <hr>
+                            <p class="mb-1"><strong>Nome:</strong> <span id="account-name"></span></p>
+                            <p><strong>E-mail:</strong> <span id="account-email"></span></p>
+                            <button class="btn btn-outline-danger btn-sm" id="logout-btn-2">Sair da Conta</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 mb-4" id="change-password-section">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-body">
+                            <h3 class="card-title h4"><i class="bi bi-lock-fill"></i> Alterar Senha</h3>
+                            <hr>
+                            <form id="change-password-form">
+                                <div class="mb-3" id="current-password-container">
+                                    <label for="current-password" class="form-label">Senha Atual</label>
+                                    <input type="password" class="form-control" id="current-password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new-password" class="form-label">Nova Senha (mín. 6 caracteres)</label>
+                                    <input type="password" class="form-control" id="new-password" required minlength="6">
+                                </div>
+                                <button type="submit" class="btn btn-dark fw-bold">Salvar Nova Senha</button>
+                            </form>
+                            <div id="password-message" class="form-message mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="card shadow-sm rounded-4">
+                        <div class="card-body">
+                            <h3 class="card-title h4"><i class="bi bi-receipt"></i> Histórico de Compras</h3>
+                            <hr>
+                            <div id="purchase-list" class="list-group">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="checkout-section" class="section">
+            <div class="form-container text-center">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                <h2 class="mt-3 display-6 fw-bold text-success">Compra Finalizada com Sucesso!</h2>
+                <p class="lead mt-3">Sua compra foi salva no nosso sistema e um e-mail de confirmação foi enviado para:</p>
+                <p class="fs-4 fw-bold text-dark" id="account-email-checkout"></p>
+                <p class="text-muted small">Por favor, note que esta é uma simulação de e-commerce e nenhum produto real será entregue. Agradecemos sua participação!</p>
+                <button class="btn btn-dark mt-4 fw-bold" onclick="showSection('products')">
+                    Voltar para a Loja <i class="bi bi-house-door-fill"></i>
+                </button>
+            </div>
+        </section>
+
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
-        // LISTA DE PRODUTOS
+        // Lista de Produtos Estática
         const products = [
             { id: 1, name: 'Notebook Pro', price: 2500.00, image: 'notebook.jpg' },
             { id: 2, name: 'Fone de Ouvido sem Fio', price: 350.50, image: 'fone.jpg' },
@@ -360,10 +389,13 @@
             { id: 6, name: 'Livro', price: 75.00, image: 'livro.jpg' },
         ];
         
+        // Estado do Carrinho (Persistência Local)
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        
+        // Estado do Usuário Logado (Persistência de Sessão)
+        let loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser')); 
 
+        // Referências DOM
         const productListEl = document.getElementById('product-list');
         const cartItemsEl = document.getElementById('cart-items');
         const cartTotalEl = document.getElementById('cart-total');
@@ -379,7 +411,6 @@
             checkout: document.getElementById('checkout-section')
         };
         
-        const showCartBtn = document.getElementById('show-cart-btn');
         const showLoginBtn = document.getElementById('show-login-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const showRegisterBtn = document.getElementById('show-register-btn');
@@ -396,11 +427,13 @@
         const accountEmailEl = document.getElementById('account-email');
         const purchaseListEl = document.getElementById('purchase-list');
         const accountEmailCheckoutEl = document.getElementById('account-email-checkout');
+        const submitLoginBtn = document.getElementById('submit-login-btn');
+        const logoutBtn2 = document.getElementById('logout-btn-2'); // Botão na seção Conta
 
-    // SELETORES PARA OS BOTÕES CONTROLADOS PELO reCAPTCHA
-    const submitLoginBtn = document.getElementById('submit-login-btn');
-    const googleLoginContainer = document.getElementById('google-login-container');
-    // REMOVIDA A VARIÁVEL customGoogleBtn
+        // Variável global para o token reCAPTCHA
+        window._lastRecaptchaToken = null; 
+        
+        // --- FUNÇÕES DE NAVEGAÇÃO E UTILS ---
 
         function showSection(sectionName) {
             document.querySelectorAll('.section').forEach(section => {
@@ -437,7 +470,6 @@
         }
         
         function addToCart(e, productId) {
-            // Localiza o botão clicado (suporta clique em ícone/texto)
             let btnEl = null;
             try { btnEl = (e && e.target) ? e.target.closest('button') : null; } catch (err) { btnEl = null; }
 
@@ -451,14 +483,12 @@
 
             updateCart();
 
-            // Feedback visual no botão
             if (btnEl) {
                 const originalHtml = btnEl.innerHTML;
                 btnEl.disabled = true;
                 btnEl.classList.add('btn-added');
                 btnEl.innerHTML = `<i class="bi bi-check2-circle"></i> <span class="btn-add-text">Adicionado</span>`;
 
-                // Pulso no contador do carrinho
                 if (cartCountEl) {
                     cartCountEl.classList.add('cart-count-pulse');
                     setTimeout(() => cartCountEl.classList.remove('cart-count-pulse'), 600);
@@ -485,6 +515,9 @@
             
             if (cart.length === 0) {
                 cartItemsEl.innerHTML = '<div class="alert alert-warning text-center m-3">Seu carrinho está vazio. Adicione alguns produtos!</div>';
+                checkoutBtn.disabled = true;
+            } else {
+                checkoutBtn.disabled = false;
             }
             
             cart.forEach(item => {
@@ -507,170 +540,6 @@
             localStorage.setItem('cart', JSON.stringify(cart));
         }
 
-        function savePurchase() {
-            if (!loggedInUser) return;
-            const purchases = JSON.parse(localStorage.getItem('purchases')) || {};
-            const userEmailKey = loggedInUser.email; 
-            const userPurchases = purchases[userEmailKey] || [];
-            
-            const newPurchase = {
-                id: Date.now(),
-                total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-                items: cart,
-                date: new Date().toLocaleString()
-            };
-            
-            userPurchases.push(newPurchase);
-            purchases[userEmailKey] = userPurchases;
-            localStorage.setItem('purchases', JSON.stringify(purchases));
-        }
-
-        // FUNÇÃO DE RENDERIZAÇÃO DA PÁGINA DA CONTA (CORRIGIDA)
-        function renderAccountPage() {
-            if (!loggedInUser) return;
-            accountNameEl.textContent = loggedInUser.name;
-            accountEmailEl.textContent = loggedInUser.email;
-            accountEmailCheckoutEl.textContent = loggedInUser.email; 
-
-            // --- NOVA LÓGICA DE SENHA PARA GOOGLE LOGIN ---
-            const currentPasswordContainer = document.getElementById('current-password-container');
-            const currentPasswordField = document.getElementById('current-password');
-            const newPasswordField = document.getElementById('new-password');
-
-            // Se a conta for Google E NÃO tiver senha definida (password é null)
-            if (loggedInUser.google && !loggedInUser.password) {
-                if (currentPasswordContainer) {
-                    currentPasswordContainer.style.display = 'none'; // Esconde o campo "Senha Atual"
-                    currentPasswordField.removeAttribute('required'); // Remove a obrigatoriedade
-                }
-                newPasswordField.placeholder = 'Defina sua Nova Senha';
-                
-                // Altera o título da secção
-                document.querySelector('#change-password-section h3').textContent = 'Definir Senha de Acesso';
-                passwordMessageEl.innerHTML = `<div class="alert alert-info text-center m-0">Como é um login Google, defina uma senha para usar o acesso padrão.</div>`;
-
-            } else {
-                if (currentPasswordContainer) {
-                    currentPasswordContainer.style.display = 'block'; // Mostra o campo "Senha Atual"
-                    currentPasswordField.setAttribute('required', 'required'); // Volta a obrigatoriedade
-                }
-                newPasswordField.placeholder = 'Nova Senha';
-                document.querySelector('#change-password-section h3').textContent = 'Alterar Senha';
-                passwordMessageEl.innerHTML = ''; // Limpa a mensagem se não for o caso Google
-            }
-            // ---------------------------------------------
-            
-            const purchases = JSON.parse(localStorage.getItem('purchases')) || {};
-            const userPurchases = purchases[loggedInUser.email] || [];
-            
-            purchaseListEl.innerHTML = '';
-            if (userPurchases.length > 0) {
-                userPurchases.sort((a, b) => b.id - a.id); 
-                userPurchases.forEach(purchase => {
-                    const purchaseEl = document.createElement('div');
-                    purchaseEl.className = 'list-group-item list-group-item-action mb-3 rounded-3 shadow-sm';
-                    const itemsList = purchase.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
-                    purchaseEl.innerHTML = `
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1 text-primary">Pedido #${purchase.id}</h5>
-                            <small class="text-muted">${purchase.date}</small>
-                        </div>
-                        <p class="mb-1 text-muted">Itens: ${itemsList}</p>
-                        <p class="mb-0 fs-5 fw-bold text-success text-end">Total: R$ ${purchase.total.toFixed(2)}</p>
-                    `;
-                    purchaseListEl.appendChild(purchaseEl);
-                });
-            } else {
-                purchaseListEl.innerHTML = '<div class="alert alert-info text-center">Nenhuma compra encontrada.</div>';
-            }
-        }
-        
-        // FUNÇÃO loginUser CORRIGIDA (CORREÇÃO 3.1)
-        function loginUser(email, password) {
-            const user = users.find(u => u.email === email && u.password === password);
-            if (user) {
-                // Se a conta existe E foi criada pelo Google E AINDA NÃO TEM senha (password: null)
-                // Forçamos o login Google, já que não temos a senha dele no nosso sistema.
-                // Mas se ele definiu uma senha, 'user.password' não é null, e o login deve prosseguir.
-                if (user.google && !user.password) { 
-                    loginMessageEl.innerHTML = `<div class="error">Por favor, use o botão do Google para entrar ou defina uma senha na sua conta.</div>`;
-                    return;
-                }
-
-                loggedInUser = user;
-                localStorage.setItem('loggedInUser', JSON.stringify(user));
-                loginMessageEl.innerHTML = `<div class="success">Bem-vindo, ${user.name}!</div>`;
-                updateNavButtons();
-                setTimeout(() => { showSection('products'); loginMessageEl.innerHTML = ''; }, 1500);
-            } else {
-                loginMessageEl.innerHTML = `<div class="error">E-mail ou senha incorretos.</div>`;
-            }
-        }
-
-        // FUNÇÃO registerUser CORRIGIDA (CORREÇÃO 2)
-        function registerUser(name, email, password) {
-            if (password.length < 6) { 
-                registerMessageEl.innerHTML = `<div class="error">A senha deve ter pelo menos 6 caracteres.</div>`;
-                return;
-            }
-
-            const userExists = users.find(u => u.email === email);
-            if (userExists) {
-                registerMessageEl.innerHTML = `<div class="error">E-mail já cadastrado.</div>`;
-            } else {
-                const newUser = { name, email, password, google: false };
-                users.push(newUser);
-                localStorage.setItem('users', JSON.stringify(users));
-                registerMessageEl.innerHTML = `<div class="success">Cadastro realizado! Faça login para continuar.</div>`;
-                setTimeout(() => { showSection('login'); registerMessageEl.innerHTML = ''; }, 2000);
-            }
-        }
-
-        // FUNÇÃO changePassword CORRIGIDA (CORREÇÃO 3.3)
-        function changePassword(currentPassword, newPassword) {
-            if (!loggedInUser) return;
-
-            // Validação de segurança mínima (6 caracteres)
-            if (newPassword.length < 6) { 
-                passwordMessageEl.innerHTML = `<div class="error">A nova senha deve ter pelo menos 6 caracteres.</div>`;
-                return;
-            }
-            
-            // Lógica para Utilizadores Google que AINDA NÃO têm senha definida (password: null)
-            if (loggedInUser.google && !loggedInUser.password) {
-                
-                loggedInUser.password = newPassword; // Define a nova senha
-                // Mantém 'google: true'. Agora ele pode usar ambos os logins.
-                passwordMessageEl.innerHTML = `<div class="success">Senha de acesso definida com sucesso! Você pode usar o login tradicional.</div>`;
-                
-            } else {
-                // Lógica para Utilizadores Padrão OU Utilizadores Google que JÁ têm senha
-                if (loggedInUser.password !== currentPassword) {
-                    passwordMessageEl.innerHTML = `<div class="error">Senha atual incorreta.</div>`;
-                    return;
-                }
-                loggedInUser.password = newPassword;
-                passwordMessageEl.innerHTML = `<div class="success">Senha alterada com sucesso!</div>`;
-            }
-            
-            // Lógica Comum para Salvar (usa loggedInUser.google e .password)
-            const userIndex = users.findIndex(u => u.email === loggedInUser.email);
-            if (userIndex > -1) {
-                users[userIndex].password = loggedInUser.password;
-                users[userIndex].google = loggedInUser.google; // Atualiza o status Google também
-                localStorage.setItem('users', JSON.stringify(users));
-                localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-                
-                // Limpar os campos do formulário após sucesso
-                document.getElementById('current-password').value = '';
-                document.getElementById('new-password').value = '';
-                
-                // Re-renderiza a página para mostrar as mudanças (campo Senha Atual deve aparecer)
-                renderAccountPage(); 
-            }
-        }
-
-
         function updateNavButtons() {
             if (loggedInUser) {
                 showLoginBtn.style.display = 'none';
@@ -681,58 +550,16 @@
                 logoutBtn.style.display = 'none';
                 showAccountBtn.style.display = 'none';
             }
-            renderAccountPage();
         }
 
-        function togglePasswordVisibility(fieldId) {
-            const passwordField = document.getElementById(fieldId);
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-        }
-
-        // FUNÇÃO handleCredentialResponse CORRIGIDA (CORREÇÃO 3.2)
-        function handleCredentialResponse(response) {
-                    // Verifica se tivemos um reCAPTCHA resolvido antes deste fluxo de login
-                    if (!window._lastRecaptchaToken) {
-                        // Proteção local: se não houve reCAPTCHA, rejeitamos o fluxo
-                        loginMessageEl.innerHTML = `<div class="error">Falha de segurança: reCAPTCHA não detectado. Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
-                        return;
-                    }
-
-                    // Limpa o token capturado (usado apenas como prova local de que reCAPTCHA ocorreu)
-                    const capturedRecaptcha = window._lastRecaptchaToken;
-                    window._lastRecaptchaToken = null;
-
-                    const userObject = jwt_decode(response.credential);
-            
-                    let user = users.find(u => u.email === userObject.email);
-            
-            if (user) {
-                // Se o utilizador já existe (com ou sem senha), simplesmente garantimos que
-                // ele pode usar o login Google, atualizando 'google: true'.
-                user.google = true; 
-            } else {
-                // Novo utilizador via Google (sem senha por padrão)
-                user = { name: userObject.name, email: userObject.email, password: null, google: true };
-                users.push(user);
-            }
-            
-            // AQUI, atualizamos o utilizador na lista global.
-            const userIndex = users.findIndex(u => u.email === user.email);
-            if (userIndex > -1) {
-                users[userIndex] = user; 
-            }
-            
-            localStorage.setItem('users', JSON.stringify(users)); // Salva a atualização
-
-            loggedInUser = user;
-            localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-            
-            loginMessageEl.innerHTML = `<div class="success">Bem-vindo, ${user.name}!</div>`;
+        function logout() {
+            loggedInUser = null;
+            sessionStorage.removeItem('loggedInUser'); 
             updateNavButtons();
-            setTimeout(() => { showSection('products'); loginMessageEl.innerHTML = ''; }, 1500);
+            alert('Você saiu da sua conta.');
+            showSection('products');
         }
-        
+
         function jwt_decode(token) {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -741,9 +568,246 @@
             }).join(''));
             return JSON.parse(jsonPayload);
         }
+        
+        // reCAPTCHA: Habilita o botão de login após sucesso
+        window.enableLoginButtons = function(token) {
+            submitLoginBtn.disabled = false;
+            window._lastRecaptchaToken = token;
+            loginMessageEl.innerHTML = ''; 
+        }
 
-        function buildEmailTemplate(user, cart) {
+        // reCAPTCHA: Desabilita o botão
+        function disableLoginButtons() {
+            submitLoginBtn.disabled = true;
+            window._lastRecaptchaToken = null;
+        }
+
+        // --- FUNÇÕES DE COMUNICAÇÃO COM O BACKEND (/api/users e /api/purchases) ---
+
+        /**
+         * Lida com o fluxo de Login Padrão e Google.
+         */
+        async function loginUser(email, password, isGoogleLogin = false, name = null) {
+            let actionBody = { action: 'login', email };
+            if (isGoogleLogin) {
+                actionBody.name = name;
+            } else {
+                actionBody.password = password;
+            }
             
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(actionBody)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Guarda o estado do utilizador (incluindo se tem senha ou não)
+                    loggedInUser = data.user; 
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                    loginMessageEl.innerHTML = `<div class="success">Bem-vindo, ${loggedInUser.name}!</div>`;
+                    updateNavButtons();
+                    setTimeout(() => { showSection('products'); loginMessageEl.innerHTML = ''; }, 1500);
+                } else {
+                    loginMessageEl.innerHTML = `<div class="error">${data.message}</div>`;
+                }
+            } catch (error) {
+                loginMessageEl.innerHTML = `<div class="error">Erro de conexão com o servidor.</div>`;
+                console.error('Erro no login:', error);
+            }
+        }
+
+        /**
+         * Lida com a resposta da API do Google Identity.
+         */
+        window.handleCredentialResponse = function(response) {
+            if (!window._lastRecaptchaToken) {
+                loginMessageEl.innerHTML = `<div class="error">Falha de segurança: reCAPTCHA não detectado. Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
+                return;
+            }
+
+            // O token do reCAPTCHA não é usado no Google Login, mas a verificação é crucial
+            window._lastRecaptchaToken = null; // Limpa após uso de qualquer forma
+
+            const userObject = jwt_decode(response.credential);
+            loginUser(userObject.email, null, true, userObject.name);
+        }
+
+        /**
+         * Envia dados de registro para o backend (/api/users).
+         */
+        async function registerUser(name, email, password) {
+            if (password.length < 6) { 
+                registerMessageEl.innerHTML = `<div class="error">A senha deve ter pelo menos 6 caracteres.</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'register', name, email, password })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    registerMessageEl.innerHTML = `<div class="success">Cadastro realizado! Faça login para continuar.</div>`;
+                    setTimeout(() => { showSection('login'); registerMessageEl.innerHTML = ''; }, 2000);
+                } else {
+                    registerMessageEl.innerHTML = `<div class="error">${data.message}</div>`;
+                }
+            } catch (error) {
+                registerMessageEl.innerHTML = `<div class="error">Erro de conexão com o servidor.</div>`;
+                console.error('Erro no registro:', error);
+            }
+        }
+
+        /**
+         * Envia solicitação de alteração/definição de senha para o backend (/api/users).
+         */
+        async function changePassword(currentPassword, newPassword) {
+            if (!loggedInUser) return;
+
+            if (newPassword.length < 6) { 
+                passwordMessageEl.innerHTML = `<div class="error">A nova senha deve ter pelo menos 6 caracteres.</div>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'change_password', 
+                        email: loggedInUser.email, 
+                        currentPassword, 
+                        newPassword 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Atualiza o estado local do utilizador para refletir a mudança (sempre terá senha agora)
+                    loggedInUser.password = true; 
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                    
+                    passwordMessageEl.innerHTML = `<div class="success">${data.message}</div>`;
+                    
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    renderAccountPage(); 
+                } else {
+                    passwordMessageEl.innerHTML = `<div class="error">${data.message}</div>`;
+                }
+            } catch (error) {
+                passwordMessageEl.innerHTML = `<div class="error">Erro de conexão com o servidor.</div>`;
+                console.error('Erro na alteração de senha:', error);
+            }
+        }
+
+        /**
+         * Salva a compra no backend (/api/purchases).
+         * @returns {Promise<boolean>}
+         */
+        async function savePurchase() {
+            if (!loggedInUser || cart.length === 0) return false;
+
+            const purchaseData = {
+                total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+                items: cart
+            };
+
+            try {
+                const response = await fetch('/api/purchases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userEmail: loggedInUser.email, purchaseData })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Compra salva no DB (Neon). ID:', data.purchaseId);
+                    return true;
+                } else {
+                    console.error('Erro ao salvar compra no DB:', data.message);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Erro de rede/servidor ao salvar compra:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Renderiza a página da conta, incluindo o histórico de compras do backend.
+         */
+        async function renderAccountPage() {
+            if (!loggedInUser) return;
+            accountNameEl.textContent = loggedInUser.name;
+            accountEmailEl.textContent = loggedInUser.email;
+            accountEmailCheckoutEl.textContent = loggedInUser.email; 
+
+            // Lógica de Senha para Login Google (se nunca definiu senha)
+            const currentPasswordContainer = document.getElementById('current-password-container');
+            const currentPasswordField = document.getElementById('current-password');
+            const newPasswordField = document.getElementById('new-password');
+
+            if (loggedInUser.google && !loggedInUser.password) {
+                if (currentPasswordContainer) {
+                    currentPasswordContainer.style.display = 'none';
+                    currentPasswordField.removeAttribute('required');
+                }
+                newPasswordField.placeholder = 'Defina sua Nova Senha';
+                document.querySelector('#change-password-section h3').textContent = 'Definir Senha de Acesso';
+                passwordMessageEl.innerHTML = `<div class="alert alert-info text-center m-0">Como é um login Google, defina uma senha para usar o acesso padrão.</div>`;
+            } else {
+                if (currentPasswordContainer) {
+                    currentPasswordContainer.style.display = 'block';
+                    currentPasswordField.setAttribute('required', 'required');
+                }
+                newPasswordField.placeholder = 'Nova Senha';
+                document.querySelector('#change-password-section h3').textContent = 'Alterar Senha';
+                passwordMessageEl.innerHTML = '';
+            }
+            
+            // --- BUSCAR HISTÓRICO DE COMPRAS DO BACKEND ---
+            purchaseListEl.innerHTML = '<div class="text-center p-3 text-muted">A carregar histórico...</div>';
+            try {
+                const response = await fetch(`/api/purchases?email=${loggedInUser.email}`);
+                const data = await response.json();
+
+                purchaseListEl.innerHTML = ''; // Limpa o "A carregar"
+
+                if (data.success && data.purchases && data.purchases.length > 0) {
+                    data.purchases.forEach(purchase => {
+                        const purchaseEl = document.createElement('div');
+                        purchaseEl.className = 'list-group-item list-group-item-action mb-3 rounded-3 shadow-sm';
+                        // O campo 'items' vem do PG/JSONB
+                        const itemsList = purchase.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
+                        purchaseEl.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1 text-primary">Pedido #${purchase.id}</h5>
+                                <small class="text-muted">${purchase.date}</small>
+                            </div>
+                            <p class="mb-1 text-muted">Itens: ${itemsList}</p>
+                            <p class="mb-0 fs-5 fw-bold text-success text-end">Total: R$ ${parseFloat(purchase.total).toFixed(2)}</p>
+                        `;
+                        purchaseListEl.appendChild(purchaseEl);
+                    });
+                } else {
+                    purchaseListEl.innerHTML = '<div class="alert alert-info text-center">Nenhuma compra encontrada.</div>';
+                }
+            } catch (error) {
+                console.error('Erro ao buscar histórico de compras:', error);
+                purchaseListEl.innerHTML = '<div class="alert alert-danger text-center">Erro ao carregar o histórico.</div>';
+            }
+        }
+
+        // --- FUNÇÃO PARA MONTAR O E-MAIL (Igual a que você já tinha) ---
+        function buildEmailTemplate(user, cart) {
             const itemsTableBody = cart.map(item => `
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="padding: 10px 0; color: #333;">${item.name}</td>
@@ -756,23 +820,17 @@
             
             const fullMessageHtml = `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                    
                     <div style="background-color: #1a1a1a; color: white; padding: 25px; text-align: center; border-bottom: 5px solid #28a745;">
                         <h1 style="margin: 0; font-size: 26px; font-weight: 600;">Minha Loja Online</h1>
                         <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.8;">Confirmação de Pedido Recebido</p>
                     </div>
-
                     <div style="padding: 30px;">
-                        
                         <h2 style="color: #1a1a1a; margin-top: 0; font-size: 20px;">Olá, <span style="color: #28a745; font-weight: 700;">${user.name}</span>!</h2>
-                        
                         <p style="font-size: 15px; margin-bottom: 25px;">Sua compra foi um sucesso! Recebemos o seu pedido e estamos processando os itens.</p>
-
                         <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9;">
                             <h3 style="color: #555; margin-top: 0; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
                                 Detalhes do Pedido
                             </h3>
-                            
                             <table width="100%" style="border-collapse: collapse; margin-top: 15px;">
                                 <thead>
                                     <tr style="background-color: #e0e0e0;">
@@ -786,21 +844,17 @@
                                 </tbody>
                             </table>
                             </div>
-                        
                         <div style="margin-top: 30px; text-align: right;">
                             <p style="font-size: 18px; font-weight: 500; color: #1a1a1a; margin: 0;">TOTAL DA COMPRA:</p>
                             <p style="font-size: 30px; font-weight: bold; color: #28a745; margin: 5px 0 0 0;">R$ ${total}</p>
                         </div>
-                        
                         <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
                             Você receberá um novo e-mail assim que o pedido for enviado.
                         </p>
-                        
                         <div style="margin-top: 20px; text-align: center; padding: 12px; background-color: #fff3cd; color: #856404; border-radius: 8px; font-weight: 700;">
-                            (ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhum produto será enviado e nenhuma compra é real)
+                            (ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhuma compra é real)
                         </div>
                     </div>
-
                     <div style="background-color: #f4f4f4; color: #999; padding: 15px; text-align: center; font-size: 12px; border-top: 1px solid #eee;">
                         <p style="margin: 0;">Minha Loja Online | Onde a qualidade encontra você. <br>Em caso de dúvidas, entre em contato.</p>
                     </div>
@@ -811,29 +865,15 @@
                 to_name: user.name,
                 to_email: user.email,
                 message_html: fullMessageHtml,
-                from_name: "Minha Loja Online",
                 order_total: total
             };
         }
 
-        // FUNÇÕES DE BLOQUEIO/DESBLOQUEIO DO LOGIN
-        function enableLoginButtons() {
-            submitLoginBtn.disabled = false;
-            // A renderização automática do Google não precisa de classe 'enabled'.
-            // Removemos a lógica do botão customizado.
-            loginMessageEl.innerHTML = ''; 
-        }
 
-        function disableLoginButtons() {
-            // Apenas desabilita o botão de envio do formulário.
-            submitLoginBtn.disabled = true;
-            // A renderização automática do Google não precisa de classe 'disabled'.
-            // Removemos a lógica do botão customizado.
-        }
+        // --- TRATADORES DE EVENTOS ---
 
-        
-        // Event Listeners (Tratadores de Eventos)
-        showCartBtn.addEventListener('click', () => { updateCart(); showSection('cart'); });
+        // Navegação
+        document.getElementById('show-cart-btn').addEventListener('click', () => { updateCart(); showSection('cart'); });
         showLoginBtn.addEventListener('click', () => showSection('login'));
         showAccountBtn.addEventListener('click', () => {
             if (loggedInUser) {
@@ -844,15 +884,14 @@
                 showSection('login');
             }
         });
-        logoutBtn.addEventListener('click', () => {
-            loggedInUser = null;
-            localStorage.removeItem('loggedInUser');
-            updateNavButtons();
-            alert('Você saiu da sua conta.');
-            showSection('products');
-        });
+        
+        // Logout
+        logoutBtn.addEventListener('click', logout);
+        logoutBtn2.addEventListener('click', logout); // Logout na seção conta
+        
         showRegisterBtn.addEventListener('click', () => showSection('register'));
         
+        // Form: Login
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = e.target.querySelector('#login-email').value;
@@ -864,9 +903,13 @@
                 return;
             }
             
-            loginUser(email, password);
+            grecaptcha.reset(); // Limpa o reCAPTCHA
+            disableLoginButtons(); // Bloqueia o botão
+
+            loginUser(email, password, false);
         });
 
+        // Form: Registro
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = e.target.querySelector('#register-name').value;
@@ -876,6 +919,7 @@
             registerUser(name, email, password);
         });
 
+        // Form: Alterar Senha
         changePasswordForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const currentPassword = e.target.querySelector('#current-password').value;
@@ -883,8 +927,8 @@
             changePassword(currentPassword, newPassword);
         });
 
-        // 🚀 BLOCO ATUALIZADO (CORRIGIDO): ENVIO DE E-MAIL VIA API SERVERLESS (VERCEL/NODE.JS)
-        checkoutBtn.addEventListener('click', () => {
+        // Checkout
+        checkoutBtn.addEventListener('click', async () => {
             if (cart.length === 0) {
                 alert('Seu carrinho está vazio!');
                 return;
@@ -896,63 +940,60 @@
                 return;
             }
 
-            const emailData = buildEmailTemplate(loggedInUser, cart);
+            // 1. Salvar a Compra no Neon/PostgreSQL
+            const purchaseSaved = await savePurchase();
             
-            // Usamos a URL relativa, o que funciona se o frontend e o backend estiverem no mesmo projeto Vercel.
+            if (!purchaseSaved) {
+                alert('A compra não pôde ser salva no banco de dados. Tente novamente.');
+                return;
+            }
+
+            // 2. Enviar o E-mail de Confirmação (Serverless Function)
+            const emailData = buildEmailTemplate(loggedInUser, cart);
             const API_EMAIL_ENDPOINT = '/api/send-email'; 
             
-            // Preparar o payload (corpo da requisição POST)
             const payload = {
                 to_email: emailData.to_email,
                 to_name: emailData.to_name,
                 subject: `Confirmação de Pedido - Total: R$ ${emailData.order_total}`,
-                message_html: emailData.message_html, // O corpo HTML grande e formatado
+                message_html: emailData.message_html, 
                 order_total: emailData.order_total
             };
-            
-            fetch(API_EMAIL_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => {
+
+            try {
+                const response = await fetch(API_EMAIL_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
                 if (!response.ok) {
-                    // Lança um erro se a resposta HTTP não for 2xx (ex: 400 ou 500)
-                    throw new Error(`Erro ao enviar e-mail: Status ${response.status}`);
+                    // Lança erro, que será pego no bloco catch
+                    throw new Error(`Erro no servidor de e-mail: Status ${response.status}`);
                 }
-                return response.json();
-            })
-            .then(data => {
+                const data = await response.json();
                 console.log('E-MAIL ENVIADO COM SUCESSO! Message ID:', data.messageId);
-                // Ações de sucesso (salvar compra, limpar carrinho)
-                savePurchase();
-                cart = [];
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCart();
-                showSection('checkout');
-            })
-            .catch(error => {
-                console.error('ERRO GERAL NO CHECKOUT:', error);
-                // Ações de fallback: A compra é salva e o carrinho é limpo, mesmo se o e-mail falhar.
-                savePurchase(); 
-                cart = [];
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCart();
-                showSection('checkout');
-                // Mostra o erro do servidor, que é o 500 que você recebeu!
-                alert('Compra finalizada, mas houve um erro ao enviar o e-mail de confirmação. Detalhes: ' + error.message); 
-            });
+
+            } catch (error) {
+                console.error('ERRO GERAL NO CHECKOUT (E-MAIL):', error);
+                // Notifica o usuário, mas a compra já está salva no DB
+                alert('A compra foi finalizada e salva, mas houve um erro ao enviar o e-mail de confirmação. Detalhes: ' + error.message); 
+            }
+
+            // 3. Finalizar a Transação no Frontend
+            cart = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCart();
+            showSection('checkout');
         });
 
-        // Inicialização
+        // --- INICIALIZAÇÃO ---
         function initializeApp() {
             renderProducts();
             updateCart();
             updateNavButtons();
             
-            // Inicialização do Swiper CORRIGIDA
+            // Inicialização do Swiper
             new Swiper(".mySwiper", {
                 direction: "horizontal",
                 loop: true,
@@ -970,12 +1011,9 @@
                 },
             });
 
-            // GARANTINDO O BLOQUEIO INICIAL DOS BOTÕES DE LOGIN
+            // Garante o bloqueio inicial (até o reCAPTCHA ser resolvido)
             disableLoginButtons();
             
-            // REMOVIDO: Toda a lógica de inicialização manual e polling do Google Identity.
-            // O botão agora é inicializado automaticamente via atributos 'data-*' no HTML.
-
             // Garante que a seção de produtos é a inicial
             showSection('products'); 
         }
