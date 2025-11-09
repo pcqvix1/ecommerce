@@ -610,52 +610,58 @@
     }
 
     // Função de Login/Registro para ambos os métodos (padrão e Google)
-    async function loginUser(email, password, isGoogleLogin = false, name = null) {
-        const loginMessageEl = document.getElementById('loginMessage');
-        loginMessageEl.innerHTML = '';
-        
-        // ⚠️ A ÚNICA ALTERAÇÃO FOI NESTE BLOCO ⚠️
-        // Garante que o Login Google envie 'password: null' para o backend, o que o distingue do login padrão.
-        let actionBody = {
-            action: 'login',
-            email: email,
-            name: name, // Será null para login padrão, mas usado pelo Google
-            // Se for Login Google (isGoogleLogin: true), envia 'password: null'.
-            // Caso contrário, envia a senha ou undefined se a senha estiver vazia.
-            password: isGoogleLogin ? null : (password || undefined),
-            recaptcha: window._lastRecaptchaToken
-        };
-        // ⚠️ FIM DA ALTERAÇÃO ⚠️
+    // Função de Login/Registro para ambos os métodos (padrão e Google)
+async function loginUser(email, password, isGoogleLogin = false, name = null) {
+    const loginMessageEl = document.getElementById('login-message'); // Corrigido o ID aqui
+    loginMessageEl.innerHTML = '';
+    
+    // Inicia o corpo da requisição com os campos básicos
+    let actionBody = {
+        action: 'login',
+        email: email,
+        name: name, // Usado para login Google para cadastrar/atualizar o nome
+        recaptcha: window._lastRecaptchaToken
+    };
 
-        try {
-            const response = await fetch(API_USERS_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(actionBody)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                const user = data.user;
-                // O backend retorna um objeto 'user'
-                // Aqui podemos guardar os dados completos (email, name)
-                localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name }));
-                loginMessageEl.innerHTML = `<div class="alert alert-success">Login bem-sucedido!</div>`;
-                updateNavButtons();
-                showSection('products');
-
-            } else {
-                loginMessageEl.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-            }
-
-        } catch (error) {
-            console.error('Erro de rede/servidor:', error);
-            loginMessageEl.innerHTML = `<div class="alert alert-danger">Erro de rede ou servidor ao tentar login.</div>`;
-        }
+    // 🔑 CORREÇÃO CRUCIAL: SÓ INCLUI A SENHA SE NÃO FOR LOGIN GOOGLE
+    // Isso evita que o backend tente validar uma senha que não existe (no caso do Google Login).
+    if (!isGoogleLogin) {
+        actionBody.password = password; 
     }
+
+    try {
+        const response = await fetch(API_USERS_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(actionBody)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const user = data.user;
+            // O backend retorna um objeto 'user'
+            // Aqui podemos guardar os dados completos (email, name)
+            localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name }));
+            loginMessageEl.innerHTML = `<div class="message success">Login bem-sucedido!</div>`; // Usando classes de estilo
+            
+            // Corrigindo a chamada da função que atualiza a navegação
+            updateNavButtons();
+            
+            // Garantindo que a tela de produtos apareça
+            showSection('products'); 
+
+        } else {
+            loginMessageEl.innerHTML = `<div class="message error">${data.message}</div>`;
+        }
+
+    } catch (error) {
+        console.error('Erro de rede/servidor:', error);
+        loginMessageEl.innerHTML = `<div class="message error">Erro de rede ou servidor ao tentar login.</div>`;
+    }
+}
 
     // Função de Registro Padrão
     async function registerUser(name, email, password) {
