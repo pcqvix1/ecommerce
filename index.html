@@ -611,31 +611,28 @@
 
     // Função de Login/Registro para ambos os métodos (padrão e Google)
     // index.html - Função de Login/Registro para ambos os métodos (padrão e Google)
+// Função de Login/Registro para ambos os métodos (padrão e Google)
 async function loginUser(email, password, isGoogleLogin = false, name = null) {
     const loginMessageEl = document.getElementById('loginMessage');
     loginMessageEl.innerHTML = '';
-    
-    // Inicia o corpo da requisição com os campos básicos
+
+    // Monta o corpo base
     let actionBody = {
         action: 'login',
         email: email,
-        name: name, // Usado para login Google para cadastrar/atualizar o nome
+        name: name, // usado no login Google
         recaptcha: window._lastRecaptchaToken
     };
 
-    // 🔑 CORREÇÃO CRUCIAL: SÓ INCLUI A SENHA SE NÃO FOR LOGIN GOOGLE
-    // Garante que o campo 'password' esteja COMPLETAMENTE AUSENTE se isGoogleLogin for true.
-    if (!isGoogleLogin) {
-        actionBody.password = password; 
+    // ✅ Correção: só adiciona o campo "password" se for login normal e senha existir
+    if (!isGoogleLogin && password) {
+        actionBody.password = password;
     }
-    // O campo 'password' será omitido se for Login Google, o que é o sinal para o backend.
 
     try {
         const response = await fetch(API_USERS_ENDPOINT, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(actionBody)
         });
 
@@ -643,64 +640,19 @@ async function loginUser(email, password, isGoogleLogin = false, name = null) {
 
         if (data.success) {
             const user = data.user;
-            // O backend retorna um objeto 'user'
-            // Aqui podemos guardar os dados completos (email, name)
             localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name }));
-            loginMessageEl.innerHTML = `<div class="message success">Login bem-sucedido!</div>`; // Usando classes de estilo
-            
-            // Corrigindo a chamada da função que atualiza a navegação
-            updateNavButtons();
-            
-            // Garantindo que a tela de produtos apareça
-            showSection('products'); 
+            loginMessageEl.innerHTML = `<div class="message success">Login bem-sucedido!</div>`;
 
+            updateNavButtons();
+            showSection('products');
         } else {
             loginMessageEl.innerHTML = `<div class="message error">${data.message}</div>`;
         }
-
     } catch (error) {
         console.error('Erro de rede/servidor:', error);
         loginMessageEl.innerHTML = `<div class="message error">Erro de rede ou servidor ao tentar login.</div>`;
     }
 }
-
-    // Função de Registro Padrão
-    async function registerUser(name, email, password) {
-        const registerMessageEl = document.getElementById('registerMessage');
-        registerMessageEl.innerHTML = '';
-
-        try {
-            const actionBody = {
-                action: 'register',
-                name: name,
-                email: email,
-                password: password,
-                recaptcha: window._lastRecaptchaToken
-            };
-
-            const response = await fetch(API_USERS_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(actionBody)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                registerMessageEl.innerHTML = `<div class="alert alert-success">${data.message}. Pode fazer login agora.</div>`;
-                document.getElementById('registerForm').reset();
-                showSection('login');
-            } else {
-                registerMessageEl.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-            }
-
-        } catch (error) {
-            console.error('Erro de rede/servidor:', error);
-            registerMessageEl.innerHTML = `<div class="alert alert-danger">Erro de rede ou servidor ao tentar registro.</div>`;
-        }
-    }
 
     // --- GOOGLE IDENTITY / RECAPTCHA ---
 
