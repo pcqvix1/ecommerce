@@ -48,98 +48,67 @@ async function handleRegister(name, email, password) {
 // ────────────────────────────────
 // Login (Google ou padrão)
 // ────────────────────────────────
+// 🔑 Login unificado (Google + Padrão)
 async function handleLogin(email, password, name) {
     const existingUser = await checkUserExists(email);
 
-    // LOGIN GOOGLE (sem password)
-    if (password === undefined || password === null) {
-        if (!existingUser && name) {
+    // 1️⃣ LOGIN GOOGLE: password ausente, null, undefined ou string vazia
+    if (!password || password === '') {
+        // Se o usuário não existir, cria conta Google
+        if (!existingUser) {
             try {
+                const displayName = name || email.split('@')[0]; // fallback se o Google não mandar nome
                 await query(
                     'INSERT INTO users (name, email, google, password_hash) VALUES ($1, $2, TRUE, NULL)',
-                    [name, email]
+                    [displayName, email]
                 );
                 return {
                     success: true,
-                    user: { email, name, hasPassword: null, google: true }
+                    user: { email, name: displayName, hasPassword: null, google: true }
                 };
             } catch (error) {
-                console.error('Erro ao registar novo usuário Google:', error);
-                return { success: false, message: 'Falha ao registar novo usuário Google.' };
+                console.error('Erro ao criar conta Google:', error);
+                return { success: false, message: 'Falha ao criar nova conta Google.' };
             }
         }
 
-        if (existingUser) {
-            return {
-                success: true,
-                user: {
-                    email,
-                    name: existingUser.name,
-                    hasPassword: existingUser.hasPassword,
-                    google: existingUser.google
-                }
-            };
-        }
-
-        return { success: false, message: 'Dados insuficientes para login Google.' };
+        // Se já existir, loga normalmente (sem pedir senha)
+        return {
+            success: true,
+            user: {
+                email,
+                name: existingUser.name,
+                hasPassword: existingUser.hasPassword,
+                google: true
+            }
+        };
     }
 
-    // LOGIN PADRÃO (com senha)
+    // 2️⃣ LOGIN NORMAL: com senha
     if (password) {
         if (!existingUser) {
             return { success: false, message: 'E-mail ou senha incorretos.' };
         }
 
         if (existingUser.google) {
-            return { success: false, message: 'Conta registada via Google. Use o botão "Entrar com Google".' };
+            // Login com senha em conta Google: bloqueia
+            return { success: false, message: 'Esta conta foi criada com o Google. Use o botão "Entrar com Google".' };
         }
 
         const result = await query('SELECT password_hash FROM users WHERE email = $1', [email]);
-        if (!result.rows[0] || !result.rows[0].password_hash) {
-            return { success: false, message: 'E-mail ou senha incorretos.' };
-        }
+        const hash = result.rows[0]?.password_hash;
+        if (!hash) return { success: false, message: 'E-mail ou senha incorretos.' };
 
-        const isMatch = await bcrypt.compare(password, result.rows[0].password_hash);
-        if (!isMatch) {
-            return { success: false, message: 'E-mail ou senha incorretos.' };
-        }
+        const isMatch = await bcrypt.compare(password, hash);
+        if (!isMatch) return { success: false, message: 'E-mail ou senha incorretos.' };
 
         return {
             success: true,
-            user: {
-                email,
-                name: existingUser.name,
-                hasPassword: true,
-                google: existingUser.google
-            }
+            user: { email, name: existingUser.name, hasPassword: true, google: false }
         };
     }
 
     return { success: false, message: 'Dados de login insuficientes.' };
-}
-
-// ────────────────────────────────
-// Alterar senha (somente contas padrão)
-// ────────────────────────────────
-async function handleChangePassword(email, currentPassword, newPassword) {
-    const existingUser = await checkUserExists(email);
-    if (existingUser && existingUser.google) {
-        return { success: false, message: 'Contas Google não podem alterar a senha. Faça a gestão da senha no Google.' };
-    }
-
-    const loginResult = await handleLogin(email, currentPassword, null);
-    if (!loginResult.success) {
-        return { success: false, message: 'Senha atual incorreta.' };
-    }
-
-    try {
-        const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
-        await query('UPDATE users SET password_hash = $1 WHERE email = $2', [newPasswordHash, email]);
-        return { success: true, message: 'Senha alterada com sucesso.' };
-    } catch (error) {
-        console.error('Erro ao alterar senha:', error);
-        return { success: false, message: 'Erro interno do servidor ao alterar a senha.' };
-    }
 }
 
 // ────────────────────────────────
