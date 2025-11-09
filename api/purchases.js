@@ -1,70 +1,78 @@
-// api/purchases.js - Agora usando PostgreSQL (Neon)
+// api/purchases.js
+// Endpoint Serverless para Salvar e Listar Compras (DB).
 const { query } = require('./pg');
+const { parseBody } = require('./utils'); // Vamos criar este util em seguida
+
+// Handler para salvar a compra (POST)
+async function handlePostPurchase(userEmail, purchaseData) {
+    if (!userEmail || !purchaseData || !purchaseData.total || !purchaseData.items) {
+        return { success: false, message: 'Dados de compra incompletos.' };
+    }
+
+    try {
+        // Converte o objeto de itens do carrinho em string JSON para o tipo JSONB no PostgreSQL
+        const itemsJson = JSON.stringify(purchaseData.items);
+        
+        const result = await query(
+            'INSERT INTO purchases (user_email, total, items) VALUES ($1, $2, $3) RETURNING id',
+            [userEmail, purchaseData.total, itemsJson]
+        );
+
+        return { success: true, message: 'Compra salva com sucesso!', purchaseId: result.rows[0].id };
+    } catch (error) {
+        console.error('Erro ao salvar compra:', error);
+        return { success: false, message: 'Erro interno do servidor ao salvar compra.' };
+    }
+}
+
+// Handler para listar o histórico de compras (GET)
+async function handleGetPurchases(userEmail) {
+    if (!userEmail) {
+        return { success: false, message: 'E-mail do usuário não fornecido.' };
+    }
+
+    try {
+        const result = await query(
+            'SELECT id, total, items, date FROM purchases WHERE user_email = $1 ORDER BY date DESC',
+            [userEmail]
+        );
+        
+        return { success: true, purchases: result.rows };
+    } catch (error) {
+        console.error('Erro ao listar compras:', error);
+        return { success: false, message: 'Erro interno do servidor ao buscar histórico.' };
+    }
+}
+
+
+// --- Handler Principal (Vercel) ---
 
 module.exports = async (req, res) => {
-    // CORS e validação de método...
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') { return res.status(200).end(); }
-    
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+    }
+
     try {
-        if (req.method === 'GET') {
-            // --- LEITURA (SELECT) ---
-            const userEmail = req.query.email ? req.query.email.toLowerCase() : null;
-            if (!userEmail) {
-                return res.status(400).json({ message: 'E-mail do usuário é obrigatório.' });
-            }
-            
-            // Busca todas as compras, ordenadas por data (coluna `purchased_at`)
-            const userPurchasesRes = await query(
-                'SELECT id, total, items, purchased_at FROM purchases WHERE user_email = $1 ORDER BY purchased_at DESC', 
-                [userEmail]
-            );
-
-            // A coluna `items` é um JSONB, o driver PG o converte automaticamente em Array/Objeto JS.
-            // O frontend espera `date`, vamos mapear `purchased_at` para `date`
-            const purchases = userPurchasesRes.rows.map(row => ({
-                id: row.id,
-                total: parseFloat(row.total),
-                items: row.items,
-                // Formatação simples da data para o frontend
-                date: new Date(row.purchased_at).toLocaleString(), 
-            }));
-
-            return res.status(200).json({ success: true, purchases: purchases });
-
-        } else if (req.method === 'POST') {
-            // --- ESCRITA (INSERT) ---
-            let body;
-            try { body = req.body; } catch (error) { body = null; }
-            if (!body) { return res.status(400).json({ message: 'Corpo da requisição inválido.' }); }
-
-            const { userEmail, purchaseData } = body;
-            const lowerCaseEmail = userEmail ? userEmail.toLowerCase() : null;
-
-            if (!lowerCaseEmail || !purchaseData || !purchaseData.items || typeof purchaseData.total !== 'number') {
-                return res.status(400).json({ message: 'Dados da compra incompletos ou inválidos.' });
-            }
-            
-            // Os dados do carrinho (items) são passados como JSON e inseridos no campo JSONB do PG
-            const insertQuery = 'INSERT INTO purchases (user_email, total, items) VALUES ($1, $2, $3) RETURNING id';
-
-            const result = await query(insertQuery, [
-                lowerCaseEmail, 
-                purchaseData.total, 
-                purchaseData.items // O driver pg fará a conversão para JSON/JSONB
-            ]);
-
-            return res.status(201).json({ success: true, message: 'Compra salva com sucesso.', purchaseId: result.rows[0].id });
-
+        let result;
+        
+        if (req.method === 'POST') {
+            const body = parseBody(req);
+            result = await handlePostPurchase(body.userEmail, body.purchaseData);
+        } else if (req.method === 'GET') {
+            const userEmail = req.query.email;
+            result = await handleGetPurchases(userEmail);
         } else {
-            return res.status(405).json({ message: 'Método não permitido.' });
+            return res.status(405).json({ success: false, message: 'Método não permitido.' });
         }
 
+        return res.status(result.success ? 200 : 400).json(result);
+
     } catch (error) {
-        console.error('ERRO NO PG/API PURCHASES:', error);
+        console.error('Erro na requisição /api/purchases:', error);
         return res.status(500).json({ success: false, message: 'Erro interno do servidor ao acessar o banco de dados.' });
     }
 };

@@ -6,7 +6,8 @@
     "node": ">=16"
   },
   "dependencies": {
-    "nodemailer": "^6.9.3",  
-    "pg": "^8.11.3"
+    "nodemailer": "^6.9.3",
+    "pg": "^8.11.3",
+    "bcryptjs": "^2.4.3"
   }
 }
