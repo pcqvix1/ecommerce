@@ -117,8 +117,7 @@
         .success { background-color: #d4edda; color: #155724; }
         .error { background-color: #f8d7da; color: #721c24; }
         .google-btn-container {
-            max-width: 250px;
-            margin: 0 auto;
+            /* Alterado: Adicionada flexbox para centralizar o botão oficial do Google */
             padding-top: 10px;
         }
         /* Botão Google customizado (usamos o render do Google dentro do contêiner) */
@@ -257,24 +256,24 @@
             </form>
             <div class="my-3 text-center text-muted">ou</div>
             
-            <div class="google-btn-container" id="google-login-container">
-                <div class="google-card">
-                    <button id="custom-google-btn" type="button" class="btn-google-custom google-disabled" aria-label="Entrar com Google">
-                        <span class="google-icon">
-                            <!-- SVG do G do Google -->
-                            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="20" height="20" role="img" aria-hidden="true">
-                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.27 1.53 8.15 2.78l6-6C35.5 3 30.11 1 24 1 14.62 1 6.88 6.82 3.5 14.25l7.3 5.66C12.8 14.1 17.9 9.5 24 9.5z"/>
-                                <path fill="#34A853" d="M46.5 24.5c0-1.6-.13-2.8-.4-4H24v7.6h12.9c-.55 3-2.6 5.5-5.6 7.1l8.5 6.6C44.7 36.6 46.5 30.9 46.5 24.5z"/>
-                                <path fill="#4A90E2" d="M10.8 28.9C9.9 26.9 9.5 24.7 9.5 22.5c0-2.2.4-4.4 1.3-6.4L3.5 10C1.6 13.8 0.5 18.1 0.5 22.5c0 4.4 1.1 8.7 3 12.5l7.3-5.1z"/>
-                                <path fill="#FBBC05" d="M24 46.5c6.11 0 11.5-2 15.65-5.5l-8.5-6.6C30.27 35.5 27.54 36.5 24 36.5c-6.1 0-11.2-4.6-13.2-10.9l-7.3 5.6C6.88 41.18 14.62 46.5 24 46.5z"/>
-                            </svg>
-                        </span>
-                        <span>Entrar com Google</span>
-                    </button>
+            <div class="google-btn-container d-flex justify-content-center" id="google-login-container">
+                <div id="g_id_onload"
+                    data-client_id="413829830677-b0q7j33043556os7iertf9b9ij9gbvbi.apps.googleusercontent.com"
+                    data-callback="handleCredentialResponse"
+                    data-ux_mode="popup"
+                    data-auto_select="false"
+                    data-context="signin">
                 </div>
-                <div id="google-render-target" style="display:none;"></div>
+                
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-shape="pill"
+                     data-logo_alignment="left">
+                </div>
             </div>
-            
             <p class="text-center mt-4 text-muted">Novo por aqui? <button id="show-register-btn" class="btn btn-link p-0 fw-bold align-baseline text-primary">Crie sua Conta</button></p>
             <div id="login-message" class="message"></div>
         </div>
@@ -401,8 +400,7 @@
     // SELETORES PARA OS BOTÕES CONTROLADOS PELO reCAPTCHA
     const submitLoginBtn = document.getElementById('submit-login-btn');
     const googleLoginContainer = document.getElementById('google-login-container');
-    const customGoogleBtn = document.getElementById('custom-google-btn');
-
+    // REMOVIDA A VARIÁVEL customGoogleBtn
 
         function showSection(sectionName) {
             document.querySelectorAll('.section').forEach(section => {
@@ -798,7 +796,6 @@
                             Você receberá um novo e-mail assim que o pedido for enviado.
                         </p>
                         
-                        <!-- AVISO DE DEMONSTRAÇÃO EM AMARELO -->
                         <div style="margin-top: 20px; text-align: center; padding: 12px; background-color: #fff3cd; color: #856404; border-radius: 8px; font-weight: 700;">
                             (ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhum produto será enviado e nenhuma compra é real)
                         </div>
@@ -822,22 +819,16 @@
         // FUNÇÕES DE BLOQUEIO/DESBLOQUEIO DO LOGIN
         function enableLoginButtons() {
             submitLoginBtn.disabled = false;
-            // Torna o botão do Google visualmente ativo
-            if (customGoogleBtn) {
-                customGoogleBtn.classList.remove('google-disabled');
-                customGoogleBtn.classList.add('google-enabled');
-            }
+            // A renderização automática do Google não precisa de classe 'enabled'.
+            // Removemos a lógica do botão customizado.
             loginMessageEl.innerHTML = ''; 
         }
 
         function disableLoginButtons() {
             // Apenas desabilita o botão de envio do formulário.
             submitLoginBtn.disabled = true;
-            // Torna o botão do Google visualmente mais escuro (estado 'desabilitado' visual)
-            if (customGoogleBtn) {
-                customGoogleBtn.classList.add('google-disabled');
-                customGoogleBtn.classList.remove('google-enabled');
-            }
+            // A renderização automática do Google não precisa de classe 'disabled'.
+            // Removemos a lógica do botão customizado.
         }
 
         
@@ -981,84 +972,9 @@
 
             // GARANTINDO O BLOQUEIO INICIAL DOS BOTÕES DE LOGIN
             disableLoginButtons();
-
-            // Inicializar o botão do Google Identity de forma controlada
-            // Criamos uma função de inicialização que pode ser chamada imediatamente
-            // ou em polling caso a lib ainda não tenha carregado (script é async defer).
-            let __googleIdentityInitialized = false;
-
-            function initGoogleIdentity() {
-                try {
-                    if (!(window.google && google.accounts && google.accounts.id)) return false;
-
-                    // Evita reinicializar duas vezes
-                    if (__googleIdentityInitialized) return true;
-
-                    // Inicializa o client com nosso callback (handleCredentialResponse já existe)
-                    google.accounts.id.initialize({
-                        client_id: '413829830677-b0q7j33043556os7iertf9b9ij9gbvbi.apps.googleusercontent.com',
-                        callback: handleCredentialResponse,
-                        // Usar redirect conforme solicitado (o fluxo fará redirecionamento para o Google)
-                        ux_mode: 'redirect',
-                        auto_select: false
-                    });
-
-                    if (google.accounts.id.disableAutoSelect) {
-                        google.accounts.id.disableAutoSelect();
-                    }
-
-                    // Renderiza em target oculto para garantir disponibilidade da API
-                    google.accounts.id.renderButton(
-                        document.getElementById('google-render-target'),
-                        { theme: 'outline', size: 'large', width: '250', shape: 'pill', text: 'signin_with' }
-                    );
-
-                    // Handler robusto do botão customizado (verifica reCAPTCHA antes de abrir o prompt)
-                    function onCustomGoogleBtnClick() {
-                        try {
-                            const recaptchaResponse = (window.grecaptcha && grecaptcha.getResponse) ? grecaptcha.getResponse() : '';
-                            if (!recaptchaResponse) {
-                                loginMessageEl.innerHTML = `<div class="error">Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
-                                return;
-                            }
-
-                            // Guardamos o token do reCAPTCHA para validar quando a credencial do Google chegar
-                            window._lastRecaptchaToken = recaptchaResponse;
-                            setTimeout(() => { window._lastRecaptchaToken = null; }, 2 * 60 * 1000);
-
-                            // Abre o fluxo (popup) do Google
-                            google.accounts.id.prompt();
-                        } catch (err) {
-                            console.warn('Erro ao abrir fluxo do Google Identity:', err);
-                            loginMessageEl.innerHTML = `<div class="error">Erro ao iniciar login com Google. Tente novamente.</div>`;
-                        }
-                    }
-
-                    // Garante que o listener seja adicionado apenas uma vez
-                    if (customGoogleBtn) {
-                        customGoogleBtn.removeEventListener('click', onCustomGoogleBtnClick);
-                        customGoogleBtn.addEventListener('click', onCustomGoogleBtnClick);
-                    }
-
-                    __googleIdentityInitialized = true;
-                    return true;
-                } catch (err) {
-                    console.warn('Não foi possível inicializar o Google Identity (interna):', err);
-                    return false;
-                }
-            }
-
-            // Tenta inicializar imediatamente; se falhar, faz polling por alguns segundos
-            if (!initGoogleIdentity()) {
-                const googleInitInterval = setInterval(() => {
-                    if (initGoogleIdentity()) {
-                        clearInterval(googleInitInterval);
-                    }
-                }, 300);
-
-                // Timeout de segurança: para o polling após 12s
-                setTimeout(() => clearInterval(googleInitInterval), 12000);
-            }
+            
+            // REMOVIDO: Toda a lógica de inicialização manual e polling do Google Identity.
+            // O botão agora é inicializado automaticamente via atributos 'data-*' no HTML.
 
             // Garante que a seção de produtos é a inicial
             showSection('products'); 
