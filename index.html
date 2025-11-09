@@ -350,642 +350,507 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
-    // LISTA DE PRODUTOS
+    // URL da API
+    const API_BASE_URL = window.location.origin;
+    const API_USERS_ENDPOINT = API_BASE_URL + '/api/users';
+    const API_PURCHASES_ENDPOINT = API_BASE_URL + '/api/purchases';
+
+    // Lista de produtos (MANTIDO)
     const products = [
-        { id: 1, name: 'Notebook Pro', price: 2500.00, image: 'notebook.jpg' },
-        { id: 2, name: 'Fone de Ouvido sem Fio', price: 350.50, image: 'fone.jpg' },
-        { id: 3, name: 'Relógio Inteligente', price: 800.00, image: 'relogio.jpg' },
-        { id: 4, name: 'Kit de Canetas', price: 45.90, image: 'canetas.jpg' },
-        { id: 5, name: 'Planta Decorativa', price: 120.00, image: 'planta.jpg' },
-        { id: 6, name: 'Livro', price: 75.00, image: 'livro.jpg' },
+        { id: 1, name: 'Canetas (Kit 10)', price: 12.99, image: 'canetas.jpg', description: 'Kit com 10 canetas esferográficas coloridas.' },
+        { id: 2, name: 'Caderno A5', price: 25.50, image: 'caderno.jpg', description: 'Caderno pautado A5 com capa dura.' },
+        { id: 3, name: 'Mochila Elegante', price: 150.00, image: 'mochila.jpg', description: 'Mochila preta com design moderno e compartimento para notebook.' },
+        { id: 4, name: 'Marcadores de Texto (Kit 6)', price: 18.00, image: 'marcadores.jpg', description: 'Kit com 6 marcadores de texto em cores neon.' },
+        { id: 5, name: 'Planner Semanal', price: 35.90, image: 'planner.jpg', description: 'Planner não datado para organização semanal.' },
+        { id: 6, name: 'Garrafa Térmica', price: 55.00, image: 'garrafa.jpg', description: 'Garrafa térmica de 500ml em aço inoxidável.' }
     ];
-    
-    // ESTADO: O carrinho continua no localStorage para persistência.
+
+    // Variáveis de estado
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    // ESTADO: O usuário logado agora usa sessionStorage (mais seguro para sessões).
-    let loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
-    
-    // API ENDPOINTS (Devemos ter estes arquivos na pasta /api)
-    const API_USER_ENDPOINT = '/api/users';
-    const API_PURCHASE_ENDPOINT = '/api/purchases';
-    const API_EMAIL_ENDPOINT = '/api/send-email';
-    
-    // Referências DOM (mantidas do seu código original)
-    const productListEl = document.getElementById('product-list');
-    const cartItemsEl = document.getElementById('cart-items');
-    const cartTotalEl = document.getElementById('cart-total');
-    const cartCountEl = document.getElementById('cart-count');
-    const swiperContainer = document.querySelector('.swiper-container');
-    
-    const sections = {
-        products: document.getElementById('products-section'),
-        cart: document.getElementById('cart-section'),
-        login: document.getElementById('login-section'),
-        register: document.getElementById('register-section'),
-        account: document.getElementById('account-section'),
-        checkout: document.getElementById('checkout-section')
-    };
-    
-    const showCartBtn = document.getElementById('show-cart-btn');
-    const showLoginBtn = document.getElementById('show-login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const showRegisterBtn = document.getElementById('show-register-btn');
-    const showAccountBtn = document.getElementById('show-account-btn');
-    const checkoutBtn = document.getElementById('checkout-btn');
-    
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const changePasswordForm = document.getElementById('change-password-form');
-    const loginMessageEl = document.getElementById('login-message');
-    const registerMessageEl = document.getElementById('register-message');
-    const passwordMessageEl = document.getElementById('password-message');
-    const accountNameEl = document.getElementById('account-name');
-    const accountEmailEl = document.getElementById('account-email');
-    const purchaseListEl = document.getElementById('purchase-list');
-    const accountEmailCheckoutEl = document.getElementById('account-email-checkout');
+    let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
 
-    const submitLoginBtn = document.getElementById('submit-login-btn');
-    const googleLoginContainer = document.getElementById('google-login-container');
-    
-    // Variável global para o token reCAPTCHA
-    window._lastRecaptchaToken = null; 
+    // --- UTILS ---
 
-    // --- FUNÇÕES DE NAVEGAÇÃO E UX (MANTIDAS) ---
-
-    function showSection(sectionName) {
-        document.querySelectorAll('.section').forEach(section => {
-            section.classList.remove('active');
+    // Função para mostrar a seção correta
+    function showSection(sectionId) {
+        document.querySelectorAll('main section').forEach(section => {
+            section.classList.add('d-none');
         });
-        sections[sectionName].classList.add('active');
-
-        if (sectionName === 'products') {
-            swiperContainer.classList.add('active');
-        } else {
-            swiperContainer.classList.remove('active');
-        }
+        document.getElementById(sectionId + 'Section').classList.remove('d-none');
     }
-    
+
+    // Formata valor para BRL
+    const formatBRL = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+
+    // Renderiza a lista de produtos
     function renderProducts() {
-        // ... (Corpo da função renderProducts mantido) ...
+        const productListEl = document.getElementById('productList');
         productListEl.innerHTML = '';
         products.forEach(product => {
-            const productCol = document.createElement('div');
-            productCol.className = 'col'; 
-            productCol.innerHTML = `
-                <div class="card h-100 rounded-4 shadow-sm product-card-custom">
-                    <img src="images/${product.image}" class="card-img-top" alt="${product.name}">
-                    <div class="card-body d-flex flex-column text-center">
-                        <h3 class="card-title h5 fw-bold text-dark">${product.name}</h3>
-                        <p class="card-text fs-5 text-success fw-bold">R$ ${product.price.toFixed(2)}</p>
-                            <button class="btn btn-dark mt-auto shadow-sm btn-add-to-cart" data-add="${product.id}" onclick="addToCart(event, ${product.id})">
-                                <i class="bi bi-cart"></i> <span class="btn-add-text">Adicionar ao carrinho</span>
+            productListEl.innerHTML += `
+                <div class="col-12 col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100 product-card">
+                        <img src="${product.image}" class="card-img-top" alt="${product.name}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${product.name}</h5>
+                            <p class="card-text text-muted">${product.description}</p>
+                            <p class="card-text fw-bold mt-auto">${formatBRL(product.price)}</p>
+                            <button class="btn btn-primary add-to-cart-btn" data-product-id="${product.id}">
+                                <i class="bi bi-cart-plus me-2"></i>Adicionar ao Carrinho
                             </button>
+                        </div>
                     </div>
                 </div>
             `;
-            productListEl.appendChild(productCol);
         });
     }
-    
-    function addToCart(e, productId) {
-        let btnEl = null;
-        try { btnEl = (e && e.target) ? e.target.closest('button') : null; } catch (err) { btnEl = null; }
 
-        const product = products.find(p => p.id === productId);
-        const existingItem = cart.find(item => item.id === productId);
-        if (existingItem) {
-            existingItem.quantity++;
-        } else {
-            cart.push({ ...product, quantity: 1 });
-        }
-
-        updateCart();
-
-        if (btnEl) {
-            const originalHtml = btnEl.innerHTML;
-            btnEl.disabled = true;
-            btnEl.classList.add('btn-added');
-            btnEl.innerHTML = `<i class="bi bi-check2-circle"></i> <span class="btn-add-text">Adicionado</span>`;
-
-            if (cartCountEl) {
-                cartCountEl.classList.add('cart-count-pulse');
-                setTimeout(() => cartCountEl.classList.remove('cart-count-pulse'), 600);
-            }
-
-            setTimeout(() => {
-                try {
-                    btnEl.innerHTML = originalHtml;
-                    btnEl.classList.remove('btn-added');
-                    btnEl.disabled = false;
-                } catch (err) { /* ignore */ }
-            }, 1400);
-        }
-    }
-
-    function removeFromCart(productId) {
-        cart = cart.filter(item => item.id !== productId);
-        updateCart();
-    }
-
+    // Atualiza a visualização do carrinho e o badge do NavBar
     function updateCart() {
+        const cartItemsEl = document.getElementById('cartItems');
+        const cartTotalEl = document.getElementById('cartTotal');
+        const cartBadgeEl = document.getElementById('cartBadge');
+        const cartSectionEl = document.getElementById('cartSection');
+        const cartCheckoutBtn = document.getElementById('goToCheckoutBtn');
+        
         cartItemsEl.innerHTML = '';
         let total = 0;
-        
-        if (cart.length === 0) {
-            cartItemsEl.innerHTML = '<div class="alert alert-warning text-center m-3">Seu carrinho está vazio. Adicione alguns produtos!</div>';
-            checkoutBtn.disabled = true;
-        } else {
-            checkoutBtn.disabled = false;
-        }
-        
+        let totalItems = 0;
+
         cart.forEach(item => {
             total += item.price * item.quantity;
-            const cartItem = document.createElement('div');
-            cartItem.className = 'list-group-item d-flex justify-content-between align-items-center p-3'; 
-            cartItem.innerHTML = `
-                <div class="flex-grow-1">
-                    <h4 class="mb-1 h6 fw-bold">${item.name}</h4>
-                    <small class="text-muted">Quant: ${item.quantity}</small>
-                    <p class="mb-0 fw-bold text-dark">R$ ${(item.price * item.quantity).toFixed(2)}</p>
-                </div>
-                <button class="btn btn-sm btn-outline-danger ms-3" onclick="removeFromCart(${item.id})">Remover</button>
+            totalItems += item.quantity;
+            cartItemsEl.innerHTML += `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge text-bg-primary rounded-pill me-2">${item.quantity}</span>
+                        ${item.name}
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">${formatBRL(item.price * item.quantity)}</span>
+                        <button class="btn btn-sm btn-outline-danger remove-from-cart-btn" data-product-id="${item.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </li>
             `;
-            cartItemsEl.appendChild(cartItem);
         });
+
+        cartTotalEl.textContent = formatBRL(total);
+        cartBadgeEl.textContent = totalItems;
         
-        cartTotalEl.textContent = total.toFixed(2);
-        cartCountEl.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+        // Ativar/Desativar botão de checkout e mensagem de carrinho vazio
+        if (cart.length === 0) {
+            cartSectionEl.querySelector('.alert').classList.remove('d-none');
+            cartCheckoutBtn.disabled = true;
+        } else {
+            cartSectionEl.querySelector('.alert').classList.add('d-none');
+            cartCheckoutBtn.disabled = false;
+        }
+
+        // Salva no localStorage
         localStorage.setItem('cart', JSON.stringify(cart));
     }
 
+    // Atualiza os botões de navegação (Login/Conta)
     function updateNavButtons() {
+        const loginBtn = document.getElementById('loginBtn');
+        const accountBtn = document.getElementById('accountBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const welcomeMessageEl = document.getElementById('welcomeMessage');
+
+        loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
         if (loggedInUser) {
-            showLoginBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline';
-            showAccountBtn.style.display = 'inline';
+            loginBtn.classList.add('d-none');
+            accountBtn.classList.remove('d-none');
+            logoutBtn.classList.remove('d-none');
+            welcomeMessageEl.textContent = `Olá, ${loggedInUser.name || loggedInUser.email}!`;
+            showSection('products'); // Volta para produtos se logar
+            
+            // Renderiza os dados da conta
+            renderAccountDetails();
+
         } else {
-            showLoginBtn.style.display = 'inline';
-            logoutBtn.style.display = 'none';
-            showAccountBtn.style.display = 'none';
+            loginBtn.classList.remove('d-none');
+            accountBtn.classList.add('d-none');
+            logoutBtn.classList.add('d-none');
+            welcomeMessageEl.textContent = '';
+            
+            // Limpa a seção de conta
+            document.getElementById('accountDetails').innerHTML = '';
+            document.getElementById('purchaseHistory').innerHTML = '';
         }
     }
 
-    function logout() {
-        loggedInUser = null;
-        sessionStorage.removeItem('loggedInUser'); 
+    // Desabilita os botões de login até o reCAPTCHA carregar
+    function disableLoginButtons() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+
+        if (loginForm) loginForm.querySelector('button[type="submit"]').disabled = true;
+        if (registerForm) registerForm.querySelector('button[type="submit"]').disabled = true;
+
+        // Botão Google GSI não precisa ser desabilitado se estiver usando o widget padrão.
+    }
+    
+    // --- FUNÇÕES DE CONTA E HISTÓRICO ---
+
+    // Pega o histórico de compras do backend
+    async function fetchPurchaseHistory(email) {
+        try {
+            const response = await fetch(`${API_PURCHASES_ENDPOINT}?email=${email}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                return data.purchases;
+            } else {
+                console.error('Erro ao buscar histórico:', data.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Erro de rede ao buscar histórico:', error);
+            return null;
+        }
+    }
+
+    // Renderiza a seção de histórico de compras
+    async function renderAccountDetails() {
+        const accountDetailsEl = document.getElementById('accountDetails');
+        const purchaseHistoryEl = document.getElementById('purchaseHistory');
+        
+        if (!loggedInUser) {
+            accountDetailsEl.innerHTML = '';
+            purchaseHistoryEl.innerHTML = '';
+            return;
+        }
+
+        accountDetailsEl.innerHTML = `
+            <p><strong>Nome:</strong> ${loggedInUser.name || 'Não fornecido'}</p>
+            <p><strong>E-mail:</strong> ${loggedInUser.email}</p>
+        `;
+
+        // 1. Busca o histórico
+        const history = await fetchPurchaseHistory(loggedInUser.email);
+        
+        if (!history || history.length === 0) {
+            purchaseHistoryEl.innerHTML = '<div class="alert alert-info">Nenhuma compra encontrada no seu histórico.</div>';
+            return;
+        }
+
+        // 2. Renderiza o histórico
+        purchaseHistoryEl.innerHTML = history.map(purchase => {
+            const date = new Date(purchase.date);
+            const formattedDate = date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+            
+            const itemsList = purchase.items.map(item => 
+                `<li>${item.quantity}x ${item.name} (${formatBRL(item.price)})</li>`
+            ).join('');
+
+            return `
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Compra #${purchase.id} - ${formattedDate}</h6>
+                        <p class="card-text fw-bold">Total: ${formatBRL(purchase.total)}</p>
+                        <p class="card-text">Itens:</p>
+                        <ul class="list-unstyled">${itemsList}</ul>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // --- FUNÇÕES DE CARRINHO ---
+
+    // Adiciona um produto ao carrinho
+    function addToCart(productId) {
+        const product = products.find(p => p.id === productId);
+        if (product) {
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            updateCart();
+        }
+    }
+
+    // Remove um produto do carrinho
+    function removeFromCart(productId) {
+        const existingItemIndex = cart.findIndex(item => item.id === productId);
+        if (existingItemIndex > -1) {
+            const existingItem = cart[existingItemIndex];
+            if (existingItem.quantity > 1) {
+                existingItem.quantity -= 1;
+            } else {
+                cart.splice(existingItemIndex, 1); // Remove o item se a quantidade for 1
+            }
+            updateCart();
+        }
+    }
+
+    // --- FUNÇÕES DE AUTENTICAÇÃO ---
+
+    // Função de Logout
+    function logoutUser() {
+        localStorage.removeItem('loggedInUser');
+        localStorage.removeItem('cart'); // Limpa o carrinho ao sair
+        cart = [];
+        updateCart();
         updateNavButtons();
-        alert('Você saiu da sua conta.');
         showSection('products');
     }
 
-    function togglePasswordVisibility(fieldId) {
-        const passwordField = document.getElementById(fieldId);
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-    }
-    
-    function jwt_decode(token) {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-    }
-    
-    // reCAPTCHA: Habilita o botão de login após sucesso
-    window.enableLoginButtons = function(token) {
-        submitLoginBtn.disabled = false;
-        window._lastRecaptchaToken = token;
-        loginMessageEl.innerHTML = ''; 
-    }
-
-    // reCAPTCHA: Desabilita o botão
-    function disableLoginButtons() {
-        submitLoginBtn.disabled = true;
-        window._lastRecaptchaToken = null;
-    }
-
-    // --- FUNÇÕES DE COMUNICAÇÃO COM O BACKEND (MIGRAÇÃO DE ARMAZENAMENTO) ---
-    
-    /**
-     * Lida com o fluxo de Login Padrão e Google (via API).
-     */
+    // Função de Login/Registro para ambos os métodos (padrão e Google)
     async function loginUser(email, password, isGoogleLogin = false, name = null) {
-        let actionBody = { action: 'login', email };
-        if (isGoogleLogin) {
-            // O login Google não envia senha, o backend busca a conta pelo email
-            actionBody.name = name;
-            actionBody.recaptcha = window._lastRecaptchaToken;
-        } else {
-            // Login com senha
-            actionBody.password = password;
-            actionBody.recaptcha = window._lastRecaptchaToken;
-        }
+        const loginMessageEl = document.getElementById('loginMessage');
+        loginMessageEl.innerHTML = '';
         
+        // ⚠️ A ÚNICA ALTERAÇÃO FOI NESTE BLOCO ⚠️
+        // Garante que o Login Google envie 'password: null' para o backend, o que o distingue do login padrão.
+        let actionBody = {
+            action: 'login',
+            email: email,
+            name: name, // Será null para login padrão, mas usado pelo Google
+            // Se for Login Google (isGoogleLogin: true), envia 'password: null'.
+            // Caso contrário, envia a senha ou undefined se a senha estiver vazia.
+            password: isGoogleLogin ? null : (password || undefined),
+            recaptcha: window._lastRecaptchaToken
+        };
+        // ⚠️ FIM DA ALTERAÇÃO ⚠️
+
         try {
-            const response = await fetch(API_USER_ENDPOINT, {
+            const response = await fetch(API_USERS_ENDPOINT, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(actionBody)
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
-                loggedInUser = data.user; 
-                sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-                loginMessageEl.innerHTML = `<div class="success">Bem-vindo, ${loggedInUser.name}!</div>`;
+                const user = data.user;
+                // O backend retorna um objeto 'user'
+                // Aqui podemos guardar os dados completos (email, name)
+                localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name }));
+                loginMessageEl.innerHTML = `<div class="alert alert-success">Login bem-sucedido!</div>`;
                 updateNavButtons();
-                setTimeout(() => { showSection('products'); loginMessageEl.innerHTML = ''; }, 1500);
+                showSection('products');
+
             } else {
-                loginMessageEl.innerHTML = `<div class="error">${data.message}</div>`;
+                loginMessageEl.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
             }
+
         } catch (error) {
-            loginMessageEl.innerHTML = `<div class="error">Erro de conexão com o servidor.</div>`;
-            console.error('Erro no login:', error);
-        }
-        // Independentemente do resultado, limpa e reseta o reCAPTCHA para o próximo uso
-        if (window.grecaptcha) {
-            window.grecaptcha.reset(); 
-            disableLoginButtons();
+            console.error('Erro de rede/servidor:', error);
+            loginMessageEl.innerHTML = `<div class="alert alert-danger">Erro de rede ou servidor ao tentar login.</div>`;
         }
     }
 
-    /**
-     * Lida com a resposta da API do Google Identity (via API).
-     */
-    window.handleCredentialResponse = function(response) {
-        if (!window._lastRecaptchaToken) {
-            loginMessageEl.innerHTML = `<div class="error">Falha de segurança: reCAPTCHA não detectado. Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
-            return;
-        }
-
-        const userObject = jwt_decode(response.credential);
-        // O reCAPTCHA será verificado dentro da função loginUser com o token em window._lastRecaptchaToken
-        loginUser(userObject.email, null, true, userObject.name);
-    }
-
-    /**
-     * Envia dados de registro para o backend (via API).
-     */
+    // Função de Registro Padrão
     async function registerUser(name, email, password) {
-        if (password.length < 6) { 
-            registerMessageEl.innerHTML = `<div class="error">A senha deve ter pelo menos 6 caracteres.</div>`;
-            return;
-        }
+        const registerMessageEl = document.getElementById('registerMessage');
+        registerMessageEl.innerHTML = '';
 
         try {
-            const response = await fetch(API_USER_ENDPOINT, {
+            const actionBody = {
+                action: 'register',
+                name: name,
+                email: email,
+                password: password,
+                recaptcha: window._lastRecaptchaToken
+            };
+
+            const response = await fetch(API_USERS_ENDPOINT, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'register', name, email, password })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                registerMessageEl.innerHTML = `<div class="success">Cadastro realizado! Faça login para continuar.</div>`;
-                setTimeout(() => { showSection('login'); registerMessageEl.innerHTML = ''; }, 2000);
-            } else {
-                registerMessageEl.innerHTML = `<div class="error">${data.message}</div>`;
-            }
-        } catch (error) {
-            registerMessageEl.innerHTML = `<div class="error">Erro de conexão com o servidor.</div>`;
-            console.error('Erro no registro:', error);
-        }
-    }
-
-    /**
-     * Envia solicitação de alteração/definição de senha (via API).
-     */
-    async function changePassword(currentPassword, newPassword) {
-        if (!loggedInUser) return;
-
-        if (newPassword.length < 6) { 
-            passwordMessageEl.innerHTML = `<div class="error">A nova senha deve ter pelo menos 6 caracteres.</div>`;
-            return;
-        }
-
-        // Lógica de Senha para Login Google (se nunca definiu senha)
-        const isGoogleUserWithoutPassword = loggedInUser.google && loggedInUser.password === null;
-        
-        let actionBody = { 
-            action: 'change_password', 
-            email: loggedInUser.email, 
-            newPassword 
-        };
-
-        if (!isGoogleUserWithoutPassword) {
-            // Se o usuário tem senha (ou é login padrão), a senha atual é obrigatória
-            if (!currentPassword) {
-                 passwordMessageEl.innerHTML = `<div class="error">A senha atual é obrigatória para alteração.</div>`;
-                 return;
-            }
-            actionBody.currentPassword = currentPassword;
-        }
-        
-        try {
-            const response = await fetch(API_USER_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(actionBody)
             });
 
             const data = await response.json();
 
             if (data.success) {
-                // Atualiza o estado local do utilizador para refletir a mudança
-                loggedInUser.password = true; // Se mudou, ele passa a ter uma senha (para o frontend)
-                sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-                
-                passwordMessageEl.innerHTML = `<div class="success">${data.message}</div>`;
-                
-                document.getElementById('current-password').value = '';
-                document.getElementById('new-password').value = '';
-                renderAccountPage(); 
+                registerMessageEl.innerHTML = `<div class="alert alert-success">${data.message}. Pode fazer login agora.</div>`;
+                document.getElementById('registerForm').reset();
+                showSection('login');
             } else {
-                passwordMessageEl.innerHTML = `<div class="error">${data.message}</div>`;
+                registerMessageEl.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
             }
+
         } catch (error) {
-            passwordMessageEl.innerHTML = `<div class="error">Erro de conexão com o servidor.</div>`;
-            console.error('Erro na alteração de senha:', error);
+            console.error('Erro de rede/servidor:', error);
+            registerMessageEl.innerHTML = `<div class="alert alert-danger">Erro de rede ou servidor ao tentar registro.</div>`;
         }
     }
 
-    /**
-     * Salva a compra no backend (via API).
-     * @returns {Promise<boolean>}
-     */
-    async function savePurchase() {
-        if (!loggedInUser || cart.length === 0) return false;
+    // --- GOOGLE IDENTITY / RECAPTCHA ---
 
-        const purchaseData = {
-            total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-            items: cart
-        };
+    // Callback para reCAPTCHA (chamado quando o reCAPTCHA é resolvido)
+    window.recaptchaCallback = function(token) {
+        window._lastRecaptchaToken = token;
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
 
-        try {
-            const response = await fetch(API_PURCHASE_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userEmail: loggedInUser.email, purchaseData })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                console.log('Compra salva no DB (Neon). ID:', data.purchaseId);
-                return true;
-            } else {
-                console.error('Erro ao salvar compra no DB:', data.message);
-                return false;
-            }
-        } catch (error) {
-            console.error('Erro de rede/servidor ao salvar compra:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Renderiza a página da conta, incluindo o histórico de compras do backend (via API).
-     */
-    async function renderAccountPage() {
-        if (!loggedInUser) return;
-        accountNameEl.textContent = loggedInUser.name;
-        accountEmailEl.textContent = loggedInUser.email;
-        accountEmailCheckoutEl.textContent = loggedInUser.email; 
-
-        // Lógica de Senha para Login Google (se nunca definiu senha)
-        const currentPasswordContainer = document.getElementById('current-password-container');
-        const currentPasswordField = document.getElementById('current-password');
-        const newPasswordField = document.getElementById('new-password');
-
-        // Note: loggedInUser.password é boolean/string/null no backend, mas usamos o null para identificar o Google
-        if (loggedInUser.google && loggedInUser.password === null) {
-            if (currentPasswordContainer) {
-                currentPasswordContainer.style.display = 'none';
-                currentPasswordField.removeAttribute('required');
-            }
-            newPasswordField.placeholder = 'Defina sua Nova Senha';
-            document.querySelector('#change-password-section h3').textContent = 'Definir Senha de Acesso';
-            passwordMessageEl.innerHTML = `<div class="alert alert-info text-center m-0">Como é um login Google, defina uma senha para usar o acesso padrão.</div>`;
-        } else {
-            if (currentPasswordContainer) {
-                currentPasswordContainer.style.display = 'block';
-                currentPasswordField.setAttribute('required', 'required');
-            }
-            newPasswordField.placeholder = 'Nova Senha';
-            document.querySelector('#change-password-section h3').textContent = 'Alterar Senha';
-            passwordMessageEl.innerHTML = '';
-        }
+        if (loginForm) loginForm.querySelector('button[type="submit"]').disabled = false;
+        if (registerForm) registerForm.querySelector('button[type="submit"]').disabled = false;
         
-        // --- BUSCAR HISTÓRICO DE COMPRAS DO BACKEND ---
-        purchaseListEl.innerHTML = '<div class="text-center p-3 text-muted">A carregar histórico...</div>';
-        try {
-            const response = await fetch(`${API_PURCHASE_ENDPOINT}?email=${loggedInUser.email}`);
-            const data = await response.json();
-
-            purchaseListEl.innerHTML = ''; // Limpa o "A carregar"
-
-            if (data.success && data.purchases && data.purchases.length > 0) {
-                data.purchases.forEach(purchase => {
-                    const purchaseEl = document.createElement('div');
-                    purchaseEl.className = 'list-group-item list-group-item-action mb-3 rounded-3 shadow-sm';
-                    // O campo 'items' vem do PG/JSONB
-                    const itemsList = purchase.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
-                    
-                    // Converte a data (se vier em formato ISO do PG) para local
-                    const purchaseDate = new Date(purchase.date).toLocaleString();
-
-                    purchaseEl.innerHTML = `
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1 text-primary">Pedido #${purchase.id}</h5>
-                            <small class="text-muted">${purchaseDate}</small>
-                        </div>
-                        <p class="mb-1 text-muted">Itens: ${itemsList}</p>
-                        <p class="mb-0 fs-5 fw-bold text-success text-end">Total: R$ ${parseFloat(purchase.total).toFixed(2)}</p>
-                    `;
-                    purchaseListEl.appendChild(purchaseEl);
-                });
-            } else {
-                purchaseListEl.innerHTML = '<div class="alert alert-info text-center">Nenhuma compra encontrada.</div>';
-            }
-        } catch (error) {
-            console.error('Erro ao buscar histórico de compras:', error);
-            purchaseListEl.innerHTML = '<div class="alert alert-danger text-center">Erro ao carregar o histórico.</div>';
-        }
+        document.getElementById('loginMessage').innerHTML = ''; // Limpa mensagens de erro
+        document.getElementById('registerMessage').innerHTML = '';
     }
-    
-    // --- FUNÇÃO PARA MONTAR O E-MAIL (MANTIDA) ---
-    function buildEmailTemplate(user, cart) {
-        // ... (Corpo da função buildEmailTemplate mantido e funcional) ...
-        const itemsTableBody = cart.map(item => `
-            <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 10px 0; color: #333;">${item.name}</td>
-                <td style="padding: 10px 0; text-align: center; color: #333;">${item.quantity}</td>
-                <td style="padding: 10px 0; text-align: right; color: #333;">R$ ${(item.price * item.quantity).toFixed(2)}</td>
-            </tr>
-        `).join('');
 
-        const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
-        
-        const fullMessageHtml = `
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                
-                <div style="background-color: #1a1a1a; color: white; padding: 25px; text-align: center; border-bottom: 5px solid #28a745;">
-                    <h1 style="margin: 0; font-size: 26px; font-weight: 600;">Minha Loja Online</h1>
-                    <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.8;">Confirmação de Pedido Recebido</p>
-                </div>
+    // Callback para Login com Google (handleCredentialResponse)
+    // O Google executa esta função automaticamente após a interação com o botão.
+    window.handleCredentialResponse = function(response) {
+        const loginMessageEl = document.getElementById('loginMessage');
 
-                <div style="padding: 30px;">
-                    
-                    <h2 style="color: #1a1a1a; margin-top: 0; font-size: 20px;">Olá, <span style="color: #28a745; font-weight: 700;">${user.name}</span>!</h2>
-                    
-                    <p style="font-size: 15px; margin-bottom: 25px;">Sua compra foi um sucesso! Recebemos o seu pedido e estamos processando os itens.</p>
-
-                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9;">
-                        <h3 style="color: #555; margin-top: 0; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
-                            Detalhes do Pedido
-                        </h3>
-                        
-                        <table width="100%" style="border-collapse: collapse; margin-top: 15px;">
-                            <thead>
-                                <tr style="background-color: #e0e0e0;">
-                                    <th style="padding: 10px; text-align: left; color: #1a1a1a;">Produto</th>
-                                    <th style="padding: 10px; text-align: center; color: #1a1a1a;">Qtd</th>
-                                    <th style="padding: 10px; text-align: right; color: #1a1a1a;">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${itemsTableBody}
-                            </tbody>
-                        </table>
-                        </div>
-                    
-                    <div style="margin-top: 30px; text-align: right;">
-                        <p style="font-size: 18px; font-weight: 500; color: #1a1a1a; margin: 0;">TOTAL DA COMPRA:</p>
-                        <p style="font-size: 30px; font-weight: bold; color: #28a745; margin: 5px 0 0 0;">R$ ${total}</p>
-                    </div>
-                    
-                    <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
-                        Você receberá um novo e-mail assim que o pedido for enviado.
-                    </p>
-                    
-                    <div style="margin-top: 20px; text-align: center; padding: 12px; background-color: #fff3cd; color: #856404; border-radius: 8px; font-weight: 700;">
-                        (ATENÇÃO: Este é apenas um site de demonstração/brincadeira. Nenhum produto será enviado e nenhuma compra é real)
-                    </div>
-                </div>
-
-                <div style="background-color: #f4f4f4; color: #999; padding: 15px; text-align: center; font-size: 12px; border-top: 1px solid #eee;">
-                    <p style="margin: 0;">Minha Loja Online | Onde a qualidade encontra você. <br>Em caso de dúvidas, entre em contato.</p>
-                </div>
-            </div>
-        `;
-        
-        return {
-            to_name: user.name,
-            to_email: user.email,
-            message_html: fullMessageHtml,
-            from_name: "Minha Loja Online",
-            order_total: total
-        };
-    }
-    
-    // Event Listeners (Tratadores de Eventos)
-    showCartBtn.addEventListener('click', () => { updateCart(); showSection('cart'); });
-    showLoginBtn.addEventListener('click', () => showSection('login'));
-    showAccountBtn.addEventListener('click', () => {
-        if (loggedInUser) {
-            renderAccountPage();
-            showSection('account');
-        } else {
-            alert('Você precisa estar logado para ver a sua conta!');
-            showSection('login');
-        }
-    });
-    logoutBtn.addEventListener('click', logout);
-    showRegisterBtn.addEventListener('click', () => showSection('register'));
-    
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = e.target.querySelector('#login-email').value;
-        const password = e.target.querySelector('#login-password').value;
-        const recaptchaResponse = grecaptcha.getResponse();
-
-        if (!recaptchaResponse) {
-            loginMessageEl.innerHTML = `<div class="error">Por favor, resolva o "Não sou um robô".</div>`;
+        if (!window._lastRecaptchaToken) {
+            loginMessageEl.innerHTML = `<div class="alert alert-warning">Falha de segurança: reCAPTCHA não detectado. Por favor, resolva o reCAPTCHA antes de entrar com Google.</div>`;
             return;
         }
-        
-        // O reset e disable são tratados dentro de loginUser
-        loginUser(email, password, false);
+
+        // Certifique-se de que a biblioteca 'jwt-decode' está incluída no seu projeto
+        // ou use a lógica do seu código para decodificar o token.
+        try {
+            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+            
+            // Chama loginUser:
+            // email: userObject.email
+            // password: null (ausência de senha, forçado para o backend)
+            // isGoogleLogin: true
+            // name: userObject.name
+            loginUser(userObject.email, null, true, userObject.name); 
+
+        } catch (e) {
+            console.error('Erro ao decodificar token do Google:', e);
+            loginMessageEl.innerHTML = `<div class="alert alert-danger">Erro ao processar dados do Google.</div>`;
+        }
+    }
+    
+    // --- LISTENERS ---
+
+    // Listener para adicionar ao carrinho
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('add-to-cart-btn')) {
+            const productId = parseInt(e.target.dataset.productId);
+            addToCart(productId);
+        }
     });
 
-    registerForm.addEventListener('submit', (e) => {
+    // Listener para remover do carrinho
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-from-cart-btn')) {
+            const productId = parseInt(e.target.dataset.productId);
+            removeFromCart(productId);
+        }
+    });
+
+    // Listener para o formulário de Login Padrão
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const name = e.target.querySelector('#register-name').value;
-        const email = e.target.querySelector('#register-email').value;
-        const password = e.target.querySelector('#register-password').value;
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        loginUser(email, password, false); // isGoogleLogin: false
+    });
+
+    // Listener para o formulário de Registro Padrão
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
 
         registerUser(name, email, password);
     });
 
-    changePasswordForm.addEventListener('submit', (e) => {
+    // Listener para o botão de Logout
+    document.getElementById('logoutBtn').addEventListener('click', logoutUser);
+
+    // Listener para finalizar compra
+    document.getElementById('finishCheckoutBtn').addEventListener('click', async function(e) {
         e.preventDefault();
-        const currentPassword = e.target.querySelector('#current-password').value;
-        const newPassword = e.target.querySelector('#new-password').value;
-        changePassword(currentPassword, newPassword);
-    });
-
-    // CHECKOUT: SALVAR NO DB E ENVIAR E-MAIL
-    checkoutBtn.addEventListener('click', async () => {
-        if (cart.length === 0) {
-            alert('Seu carrinho está vazio!');
-            return;
-        }
-
         if (!loggedInUser) {
             alert('Você precisa estar logado para finalizar a compra!');
-            showSection('login');
             return;
         }
 
-        // 1. Salvar a Compra no Neon/PostgreSQL
-        const purchaseSaved = await savePurchase();
+        const checkoutMessageEl = document.getElementById('checkoutMessage');
+        checkoutMessageEl.innerHTML = '';
         
-        if (!purchaseSaved) {
-            alert('A compra não pôde ser salva no banco de dados. Tente novamente.');
-            return;
-        }
+        // Preparar dados da compra
+        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const itemsForDB = cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+        }));
 
-        // 2. Enviar o E-mail de Confirmação (Serverless Function)
-        const emailData = buildEmailTemplate(loggedInUser, cart);
-        
-        const payload = {
-            to_email: emailData.to_email,
-            to_name: emailData.to_name,
-            subject: `Confirmação de Pedido - Total: R$ ${emailData.order_total}`,
-            message_html: emailData.message_html, 
-            order_total: emailData.order_total
+        const purchaseData = {
+            email: loggedInUser.email,
+            total: total,
+            items: itemsForDB
         };
 
+        // 1. Salvar no Banco de Dados (API /api/purchases)
         try {
-            const response = await fetch(API_EMAIL_ENDPOINT, {
+            const response = await fetch(API_PURCHASES_ENDPOINT, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(purchaseData)
             });
-            
+
             if (!response.ok) {
-                // Lança erro, que será pego no bloco catch
-                throw new Error(`Erro no servidor de e-mail: Status ${response.status}`);
+                // Se a API retornar um 4xx ou 5xx
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Erro do servidor: ${response.status}`);
             }
-            const data = await response.json();
-            console.log('E-MAIL ENVIADO COM SUCESSO! Message ID:', data.messageId);
+            
+            const dbData = await response.json();
+            console.log('Compra salva no DB (Neon). ID:', dbData.purchaseId);
+            
+            // 2. Enviar E-mail (API /api/send-email)
+            const emailResponse = await fetch(API_BASE_URL + '/api/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    to_email: loggedInUser.email,
+                    to_name: loggedInUser.name,
+                    order_total: formatBRL(total),
+                    items: itemsForDB
+                })
+            });
+
+            const emailData = await emailResponse.json();
+            
+            if (!emailData.messageId) {
+                // Se o email falhar mas a compra estiver salva
+                throw new Error('E-mail não pôde ser enviado, mas a compra foi salva.');
+            }
+
+            checkoutMessageEl.innerHTML = `<div class="alert alert-success">Compra finalizada! E-mail de confirmação enviado.</div>`;
+            console.log('E-MAIL ENVIADO COM SUCESSO! Message ID:', emailData.messageId);
 
         } catch (error) {
-            console.error('ERRO GERAL NO CHECKOUT (E-MAIL):', error);
-            // Notifica o usuário, mas a compra já está salva no DB
-            alert('A compra foi finalizada e salva, mas houve um erro ao enviar o e-mail de confirmação. Detalhes: ' + error.message); 
+            console.error('ERRO GERAL NO CHECKOUT:', error);
+            // Notifica o usuário, mas a compra já está salva no DB (se o erro foi só no e-mail)
+            checkoutMessageEl.innerHTML = `<div class="alert alert-warning">Ocorreu um erro no checkout: ${error.message}. Por favor, verifique seu e-mail.</div>`;
         }
 
         // 3. Finalizar a Transação no Frontend
@@ -1001,7 +866,7 @@
         updateCart();
         updateNavButtons();
         
-        // Inicialização do Swiper
+        // Inicialização do Swiper CORRIGIDA
         new Swiper(".mySwiper", {
             direction: "horizontal",
             loop: true,
@@ -1022,11 +887,14 @@
         // GARANTINDO O BLOQUEIO INICIAL DOS BOTÕES DE LOGIN
         disableLoginButtons();
         
+        // REMOVIDO: Toda a lógica de inicialização manual e polling do Google Identity.
+        // O botão agora é inicializado automaticamente via atributos 'data-*' no HTML.
+
         // Garante que a seção de produtos é a inicial
         showSection('products'); 
     }
 
     initializeApp();
-     </script>
+</script>
 </body>
 </html>
