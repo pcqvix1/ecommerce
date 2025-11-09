@@ -17,8 +17,8 @@ async function checkUserExists(email) {
         email: user.email,
         name: user.name,
         // Retorna true se houver hash de senha (login padrão), null caso contrário (login Google)
-        hasPassword: user.password_hash ? true : null, 
-        google: user.google 
+        hasPassword: user.password_hash ? true : null,
+        google: user.google
     };
 }
 
@@ -48,14 +48,17 @@ async function handleRegister(name, email, password) {
     }
 }
 
+// 🔑 CORREÇÃO CRUCIAL APLICADA AQUI
 // Handler de Login (Lida com Login Padrão e Login Google)
 async function handleLogin(email, password, name) {
     const existingUser = await checkUserExists(email);
 
-    // 1. Se o usuário NÃO EXISTE
-    if (!existingUser) {
-        // Se for um LOGIN GOOGLE (tem 'name' mas não tem 'password'), registra.
-        if (name && !password) {
+    // 1. **IDENTIFICAÇÃO DE LOGIN GOOGLE** (sem 'password')
+    // A lógica de frontend corrigida garante que 'password' estará AUSENTE ou null/undefined.
+    if (!password) { 
+        
+        // 1.1. Se o usuário NÃO EXISTE (e tem 'name', vindo do Google), REGISTRA-O
+        if (!existingUser && name) {
              try {
                 // Insere com google=TRUE e password_hash=NULL
                 await query(
@@ -72,37 +75,42 @@ async function handleLogin(email, password, name) {
                return { success: false, message: 'Falha ao registar novo usuário Google.' };
            }
         }
-        // Se não existe e não é login Google, falha.
-        return { success: false, message: 'E-mail ou senha incorretos.' };
-    }
-
-    // 2. Se o usuário EXISTE
-
-    // Se é uma tentativa de LOGIN GOOGLE (não enviou senha, mas enviou nome)
-    if (name && !password) {
-        // O login é válido, não precisamos verificar a senha.
-        // Se o usuário existir, o Google já o autenticou.
-        return { 
-            success: true, 
-            user: { 
-                email: email, 
-                name: existingUser.name, 
-                hasPassword: existingUser.hasPassword, 
-                google: existingUser.google 
-            } 
-        };
+        
+        // 1.2. Se o usuário EXISTE (e o Google já o autenticou), o login é bem-sucedido.
+        if (existingUser) {
+            return { 
+                success: true, 
+                user: { 
+                    email: email, 
+                    name: existingUser.name, 
+                    hasPassword: existingUser.hasPassword, 
+                    google: existingUser.google 
+                } 
+            };
+        }
     }
     
-    // Se for uma tentativa de LOGIN PADRÃO (enviou senha)
+    // 2. **IDENTIFICAÇÃO DE LOGIN PADRÃO** (Com 'password' presente/string)
+    // Este bloco só é executado se 'password' foi enviado na requisição (Login Padrão)
     if (password) {
-         // O usuário deve ter uma senha registada no DB
-        if (!existingUser.hasPassword) {
+        // Se o usuário NÃO EXISTE, falha.
+        if (!existingUser) {
+            return { success: false, message: 'E-mail ou senha incorretos.' };
+        }
+        
+         // Se o usuário é Google, não pode logar com senha.
+        if (existingUser.google) {
             return { success: false, message: 'Conta registada via Google. Use o botão "Entrar com Google".' };
         }
         
         // Compara a senha
         const result = await query('SELECT password_hash FROM users WHERE email = $1', [email]);
-        const isMatch = await bcrypt.compare(password, result.rows[0].password_hash,);
+        // Garante que o hash existe antes de comparar
+        if (!result.rows[0] || !result.rows[0].password_hash) {
+             return { success: false, message: 'E-mail ou senha incorretos.' };
+        }
+        
+        const isMatch = await bcrypt.compare(password, result.rows[0].password_hash);
         
         if (!isMatch) {
             return { success: false, message: 'E-mail ou senha incorretos.' };
@@ -119,13 +127,12 @@ async function handleLogin(email, password, name) {
         };
     }
 
-    // Se a requisição chegou aqui, faltam dados
+    // Se a requisição chegou aqui, é um login Google malformado (faltando email/name) ou dados insuficientes
     return { success: false, message: 'Dados de login insuficientes.' };
 }
 
 // Handler para alterar senha
 async function handleChangePassword(email, currentPassword, newPassword) {
-    // ... (Manter a lógica de alteração de senha) ...
     // NOTE: Se o usuário logou com Google, não deve ser permitido alterar a senha
     const existingUser = await checkUserExists(email);
     if (existingUser && existingUser.google) {
@@ -133,6 +140,7 @@ async function handleChangePassword(email, currentPassword, newPassword) {
     }
 
     // 1. Verificar senha atual
+    // Passamos 'null' para 'name' e 'currentPassword' para 'password', forçando Login Padrão
     const loginResult = await handleLogin(email, currentPassword, null);
     if (!loginResult.success) {
         return { success: false, message: 'Senha atual incorreta.' };
@@ -169,7 +177,7 @@ module.exports = async (req, res) => {
         return res.status(405).end();
     }
     
-    const body = parseBody(req); 
+    const body = parseBody(req);
     if (!body || !body.action) {
         return res.status(400).json({ success: false, message: 'Ação de usuário não especificada.' });
     }
@@ -190,9 +198,9 @@ module.exports = async (req, res) => {
                 break;
 
             case 'login':
-                // Nota: O Login Google envia (email, name, password: null)
+                // O Login Google agora envia (email, name) sem o campo password.
                 // O Login Padrão envia (email, password)
-                if (!password && !name) return res.status(400).json({ success: false, message: 'Dados de login insuficientes.' });
+                // Removemos a validação rígida daqui. handleLogin faz a distinção.
                 result = await handleLogin(email, password, name);
                 break;
 
@@ -208,10 +216,10 @@ module.exports = async (req, res) => {
         // Se o login falhar, retorna 401 Unauthorized
         // Se o registro falhar (usuário existente), retorna 409 Conflict (ou 400 Bad Request)
         if (!result.success && action === 'login') {
-            return res.status(401).json(result); 
+            return res.status(401).json(result);
         }
         if (!result.success && action === 'register') {
-            return res.status(409).json(result); 
+            return res.status(409).json(result);
         }
 
         return res.status(200).json(result);
